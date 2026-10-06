@@ -1,0 +1,27 @@
+report_id,report_type,item_category,description,organization_type,organization_name,campus_or_branch,building_or_terminal,floor_or_level,specific_area,date,approx_time,status
+FB001,Lost,Backpack,I lost my navy blue backpack near the university library. It has a small Nike logo on the front.,University,Greenfield University,Main Campus,Central Library,2nd Floor,Reading Room,2026-08-18,16:20,Lost
+FB002,Found,Backpack,Found a dark blue bag with a Nike mark close to the campus library.,University,Greenfield University,Main Campus,Central Library,2nd Floor,Reading Room,2026-08-18,16:45,Found
+FB003,Lost,Wallet,I lost my black leather wallet near the food court. It contains my student ID.,Mall,City Center Mall,Main Branch,Main Building,Ground Floor,Food Court,2026-08-18,13:10,Lost
+FB004,Found,Wallet,A dark leather wallet with an identity card was found outside the cafeteria.,Mall,City Center Mall,Main Branch,Main Building,Ground Floor,Food Court,2026-08-18,13:35,Found
+FB005,Lost,Earbuds,I misplaced my white wireless earbuds in a small charging case near Gate 18.,Airport,Metro International Airport,Terminal 2,Terminal 2,Level 3,Gate 18,2026-08-18,19:00,Lost
+FB006,Found,Earbuds,White Bluetooth earphones in a small case were found near the security area.,Airport,Metro International Airport,Terminal 2,Terminal 2,Level 3,Security Checkpoint,2026-08-18,19:20,Found
+FB007,Lost,Laptop,I lost my silver laptop in the engineering building. There is a blue sticker on the lid.,University,Greenfield University,Main Campus,Engineering Block,3rd Floor,Laboratory 3,2026-08-18,11:30,Lost
+FB008,Found,Laptop,A silver notebook computer with a blue sticker was found inside an engineering lab.,University,Greenfield University,Main Campus,Engineering Block,3rd Floor,Laboratory 3,2026-08-18,11:50,Found
+FB009,Lost,Watch,I lost a black smartwatch while waiting at the railway station.,Railway Station,Central Railway Station,Main Station,Main Concourse,Ground Level,Waiting Area,2026-08-18,09:15,Lost
+FB010,Found,Watch,A dark smart wristwatch was found near the station waiting area.,Railway Station,Central Railway Station,Main Station,Main Concourse,Ground Level,Waiting Area,2026-08-18,09:40,Found
+FB011,Lost,Phone,I lost my black smartphone near the cinema entrance on the first floor.,Mall,City Center Mall,Main Branch,Entertainment Wing,1st Floor,Cinema Entrance,2026-08-18,20:10,Lost
+FB012,Found,Phone,A black mobile phone was found close to the movie theater entrance.,Mall,City Center Mall,Main Branch,Entertainment Wing,1st Floor,Cinema Entrance,2026-08-18,20:30,Found
+FB013,Lost,Backpack,I misplaced my navy rucksack somewhere around the university library.,University,Greenfield University,Main Campus,Central Library,2nd Floor,Reading Room,2026-08-19,10:15,Lost
+FB014,Found,Backpack,A dark-blue daypack was discovered close to the reading hall.,University,Greenfield University,Main Campus,Central Library,2nd Floor,Reading Room,2026-08-19,10:40,Found
+FB015,Found,Backpack,A navy backpack was found near the airport departure hall.,Airport,Metro International Airport,Terminal 2,Terminal 2,Level 3,Departure Hall,2026-08-19,17:30,Found
+FB016,Lost,Wallet,My brown leather billfold went missing near the airport security checkpoint.,Airport,Metro International Airport,Terminal 2,Terminal 2,Level 3,Security Checkpoint,2026-08-19,14:00,Lost
+FB017,Found,Wallet,A leather money holder was found beside the security screening area.,Airport,Metro International Airport,Terminal 2,Terminal 2,Level 3,Security Checkpoint,2026-08-19,14:25,Found
+FB018,Lost,Phone,I cannot find my black mobile handset. I last remember having it near the cinema entrance.,Mall,City Center Mall,Main Branch,Entertainment Wing,1st Floor,Cinema Entrance,2026-08-19,18:10,Lost
+FB019,Found,Phone,A black smartphone was discovered outside the movie theater entrance.,Mall,City Center Mall,Main Branch,Entertainment Wing,1st Floor,Cinema Entrance,2026-08-19,18:35,Found
+FB020,Lost,Laptop,I left my silver notebook computer with a blue sticker inside the engineering laboratory.,University,Greenfield University,Main Campus,Engineering Block,3rd Floor,Laboratory 3,2026-08-19,12:20,Lost
+FB021,Found,Laptop,A metallic laptop carrying a blue sticker was discovered in the engineering lab.,University,Greenfield University,Main Campus,Engineering Block,3rd Floor,Laboratory 3,2026-08-19,12:45,Found
+FB022,Lost,Earbuds,I misplaced my white wireless buds inside their charging case near airport security.,Airport,Metro International Airport,Terminal 2,Terminal 2,Level 3,Security Checkpoint,2026-08-19,16:10,Lost
+FB023,Found,Earbuds,A pair of white Bluetooth buds in a small case was found beside the security screening point.,Airport,Metro International Airport,Terminal 2,Terminal 2,Level 3,Security Checkpoint,2026-08-19,16:35,Found
+FB024,Lost,Watch,My dark smartwatch disappeared while I was sitting in the station waiting area.,Railway Station,Central Railway Station,Main Station,Main Concourse,Ground Level,Waiting Area,2026-08-19,08:30,Lost
+FB025,Found,Watch,A dark-colored smart wristwatch was discovered near the passenger waiting section.,Railway Station,Central Railway Station,Main Station,Main Concourse,Ground Level,Waiting Area,2026-08-19,08:55,Found
+FB026,Found,Backpack,A dark blue backpack with a small laptop inside was found near the university library.,University,Greenfield University,Main Campus,Central Library,2nd Floor,Reading Room,2026-10-04,14:00,Found

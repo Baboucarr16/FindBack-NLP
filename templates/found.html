@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>FindBack - Report Found Item</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <div class="hero">
+
+        <div class="logo">
+            FindBack
+        </div>
+
+        <h1>
+            Report a Found Item
+        </h1>
+
+        <p>
+            Found something that belongs to someone else?
+            Add it to FindBack so our NLP system can help
+            identify the owner.
+        </p>
+
+    </div>
+
+
+    {% if error %}
+
+    <div class="error">
+        {{ error }}
+    </div>
+
+    {% endif %}
+
+
+    <form
+        action="/found"
+        method="POST"
+        class="report-form"
+    >
+
+
+        <!-- ITEM -->
+
+        <div class="section">
+
+            <h2>
+                1. What did you find?
+            </h2>
+
+
+            <label>
+                Item Category
+            </label>
+
+            <select
+                name="item_category"
+                required
+            >
+
+                <option value="">
+                    Select an item
+                </option>
+
+                <option value="Backpack">
+                    Backpack
+                </option>
+
+                <option value="Wallet">
+                    Wallet
+                </option>
+
+                <option value="Phone">
+                    Phone
+                </option>
+
+                <option value="Laptop">
+                    Laptop
+                </option>
+
+                <option value="Earbuds">
+                    Earbuds
+                </option>
+
+                <option value="Watch">
+                    Watch
+                </option>
+
+                <option value="Other">
+                    Other
+                </option>
+
+            </select>
+
+
+            <label>
+                Describe the found item
+            </label>
+
+            <textarea
+                name="description"
+                rows="5"
+                placeholder="Example: A silver laptop with a blue sticker was found inside Engineering Lab 3."
+                required
+            ></textarea>
+
+        </div>
+
+
+        <!-- LOCATION -->
+
+        <div class="section">
+
+            <h2>
+                2. Where did you find it?
+            </h2>
+
+
+            <label>
+                Place Type
+            </label>
+
+            <select
+                name="organization_type"
+                required
+            >
+
+                <option value="">
+                    Select place type
+                </option>
+
+                <option value="University">
+                    University
+                </option>
+
+                <option value="Airport">
+                    Airport
+                </option>
+
+                <option value="Mall">
+                    Mall
+                </option>
+
+                <option value="Railway Station">
+                    Railway Station
+                </option>
+
+                <option value="Hospital">
+                    Hospital
+                </option>
+
+                <option value="Other">
+                    Other
+                </option>
+
+            </select>
+
+
+            <label>
+                Place / Organization
+            </label>
+
+            <input
+                type="text"
+                name="organization_name"
+                placeholder="Example: Greenfield University"
+                required
+            >
+
+
+            <label>
+                Campus / Branch / Terminal
+            </label>
+
+            <input
+                type="text"
+                name="campus_or_branch"
+                placeholder="Example: Main Campus"
+            >
+
+
+            <label>
+                Building / Terminal
+            </label>
+
+            <input
+                type="text"
+                name="building_or_terminal"
+                placeholder="Example: Engineering Block"
+            >
+
+
+            <label>
+                Floor / Level
+            </label>
+
+            <input
+                type="text"
+                name="floor_or_level"
+                placeholder="Example: 3rd Floor"
+            >
+
+
+            <label>
+                Specific Area
+            </label>
+
+            <input
+                type="text"
+                name="specific_area"
+                placeholder="Example: Laboratory 3"
+            >
+
+        </div>
+
+
+        <!-- DATE -->
+
+        <div class="section">
+
+            <h2>
+                3. When did you find it?
+            </h2>
+
+
+            <div class="two-column">
+
+                <div>
+
+                    <label>
+                        Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="date"
+                        required
+                    >
+
+                </div>
+
+
+                <div>
+
+                    <label>
+                        Approximate Time
+                    </label>
+
+                    <input
+                        type="time"
+                        name="approx_time"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="submit-button"
+        >
+
+            📦 Report Found Item
+
+        </button>
+
+
+    </form>
+
+
+    <a
+        href="/"
+        class="back-button"
+    >
+
+        ← Back to FindBack
+
+    </a>
+
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>FindBack - Matches</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <div class="hero">
+
+        <div class="logo">
+            FindBack
+        </div>
+
+        <h1>
+            Potential Matches
+        </h1>
+
+        <p>
+            FindBack analyzed your lost-item report and
+            ranked the most relevant found items.
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         LOST ITEM SUMMARY
+         ===================================================== -->
+
+    <div class="lost-summary">
+
+        <h2>
+            Your Lost Item
+        </h2>
+
+        <p>
+            <strong>
+                {{ lost_report["item_category"] }}
+            </strong>
+        </p>
+
+        <p>
+            {{ lost_report["description"] }}
+        </p>
+
+        <p>
+
+            📍
+
+            {{ lost_report["organization_name"] }}
+
+            {% if lost_report["campus_or_branch"] %}
+                → {{ lost_report["campus_or_branch"] }}
+            {% endif %}
+
+            {% if lost_report["building_or_terminal"] %}
+                → {{ lost_report["building_or_terminal"] }}
+            {% endif %}
+
+            {% if lost_report["floor_or_level"] %}
+                → {{ lost_report["floor_or_level"] }}
+            {% endif %}
+
+            {% if lost_report["specific_area"] %}
+                → {{ lost_report["specific_area"] }}
+            {% endif %}
+
+        </p>
+
+        <p>
+
+            🕐
+
+            {{ lost_report["date"] }}
+
+            at
+
+            {{ lost_report["approx_time"] }}
+
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         RESULTS
+         ===================================================== -->
+
+    {% if matches %}
+
+
+        <h2>
+            Ranked Found Items
+        </h2>
+
+
+        {% for match in matches %}
+
+
+        <div class="match-card">
+
+
+            <!-- MATCH HEADER -->
+
+            <div class="match-header">
+
+                <div>
+
+                    <span class="rank">
+                        #{{ loop.index }}
+                    </span>
+
+                    <span class="report-id">
+                        {{ match["report_id"] }}
+                    </span>
+
+                </div>
+
+
+                <div class="score">
+
+                    {{ "%.1f"|format(
+                        match["final_score"] * 100
+                    ) }}%
+
+                </div>
+
+            </div>
+
+
+            <!-- ITEM -->
+
+            <h2>
+
+                {{ match["item_category"] }}
+
+            </h2>
+
+
+            <p class="description">
+
+                {{ match["description"] }}
+
+            </p>
+
+
+            <!-- LOCATION -->
+
+            <div class="location">
+
+                <strong>
+                    📍 Found Location
+                </strong>
+
+                <p>
+
+                    {{ match["organization_name"] }}
+
+                    {% if match["campus_or_branch"] %}
+                        → {{ match["campus_or_branch"] }}
+                    {% endif %}
+
+                    {% if match["building_or_terminal"] %}
+                        → {{ match["building_or_terminal"] }}
+                    {% endif %}
+
+                    {% if match["floor_or_level"] %}
+                        → {{ match["floor_or_level"] }}
+                    {% endif %}
+
+                    {% if match["specific_area"] %}
+                        → {{ match["specific_area"] }}
+                    {% endif %}
+
+                </p>
+
+            </div>
+
+
+            <!-- DATE AND TIME -->
+
+            <p>
+
+                🕐
+
+                Found on
+
+                {{ match["date"] }}
+
+                at
+
+                {{ match["approx_time"] }}
+
+            </p>
+
+
+            <!-- =================================================
+                 SCORE BREAKDOWN
+                 ================================================= -->
+
+            <div class="score-breakdown">
+
+
+                <div>
+
+                    <span>
+                        Semantic
+                    </span>
+
+                    <strong>
+
+                        {{ "%.0f"|format(
+                            match["semantic_score"] * 100
+                        ) }}%
+
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Location
+                    </span>
+
+                    <strong>
+
+                        {{ "%.0f"|format(
+                            match["location_score"] * 100
+                        ) }}%
+
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Time
+                    </span>
+
+                    <strong>
+
+                        {{ "%.0f"|format(
+                            match["time_score"] * 100
+                        ) }}%
+
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Category
+                    </span>
+
+                    <strong>
+
+                        {{ "%.0f"|format(
+                            match["category_score"] * 100
+                        ) }}%
+
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+        {% endfor %}
+
+
+    {% else %}
+
+
+        <!-- =================================================
+             NO RESULTS
+             ================================================= -->
+
+        <div class="no-results">
+
+            <h2>
+                No potential matches found
+            </h2>
+
+            <p>
+                FindBack could not find any suitable
+                found-item reports in the current database.
+            </p>
+
+        </div>
+
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         SEARCH AGAIN
+         ===================================================== -->
+
+    <a
+        href="/"
+        class="back-button"
+    >
+
+        ← Search Again
+
+    </a>
+
+
+</div>
+
+</body>
+
+</html>

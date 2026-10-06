@@ -1,0 +1,267 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f6f8;
+    color: #1f2937;
+}
+
+.container {
+    width: 92%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 0 60px;
+}
+
+/* HERO */
+
+.hero {
+    text-align: center;
+    padding: 30px 20px 40px;
+}
+
+.logo {
+    display: inline-block;
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.hero h1 {
+    font-size: 42px;
+    margin: 0 0 15px;
+}
+
+.hero p {
+    max-width: 650px;
+    margin: auto;
+    line-height: 1.6;
+    color: #64748b;
+    font-size: 17px;
+}
+
+/* FORM */
+
+.report-form {
+    background: white;
+    border-radius: 16px;
+    padding: 35px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.section {
+    margin-bottom: 35px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.section:last-of-type {
+    border-bottom: none;
+}
+
+.section h2 {
+    font-size: 21px;
+    margin-bottom: 22px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin: 15px 0 7px;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 15px;
+    background: white;
+}
+
+textarea {
+    resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #475569;
+}
+
+.two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* BUTTON */
+
+.submit-button {
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #111827;
+    color: white;
+}
+
+.submit-button:hover {
+    background: #374151;
+}
+
+/* ERROR */
+
+.error {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* RESULTS */
+
+.lost-summary {
+    background: white;
+    border-radius: 14px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+}
+
+.lost-summary h2 {
+    margin-top: 0;
+}
+
+.lost-summary p {
+    line-height: 1.6;
+}
+
+.match-card {
+    background: white;
+    border-radius: 14px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.07);
+}
+
+.match-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.rank {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.report-id {
+    color: #64748b;
+    margin-left: 10px;
+}
+
+.score {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.description {
+    line-height: 1.6;
+    color: #475569;
+}
+
+.location {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 18px 0;
+}
+
+.location p {
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+.score-breakdown {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.score-breakdown div {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+}
+
+.score-breakdown span {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 5px;
+}
+
+.score-breakdown strong {
+    font-size: 15px;
+}
+
+.no-results {
+    background: white;
+    border-radius: 14px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+}
+
+.back-button {
+    display: block;
+    text-align: center;
+    margin-top: 25px;
+    padding: 14px;
+    border-radius: 10px;
+    background: white;
+    color: #111827;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* MOBILE */
+
+@media (max-width: 650px) {
+
+    .container {
+        width: 95%;
+        padding-top: 20px;
+    }
+
+    .hero h1 {
+        font-size: 32px;
+    }
+
+    .report-form {
+        padding: 22px;
+    }
+
+    .two-column {
+        grid-template-columns: 1fr;
+    }
+
+    .score-breakdown {
+        grid-template-columns: 1fr 1fr;
+    }
+}
