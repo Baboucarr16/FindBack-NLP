@@ -1,4 +1,5 @@
 import os
+import threading
 import pandas as pd
 
 from difflib import SequenceMatcher
@@ -26,44 +27,50 @@ DATASET_FILE = os.path.join(
 )
 
 
-# ============================================================
-# LOAD DATASET
-# ============================================================
-
-df = pd.read_csv(
-    DATASET_FILE
-)
-
-df = df.reset_index(
-    drop=True
-)
+df = pd.DataFrame()
+vectorizer = None
+tfidf_matrix = None
+dataset_modified_time = None
+_dataset_lock = threading.Lock()
 
 
-# ============================================================
-# TEXT PREPROCESSING
-# ============================================================
+def load_dataset():
+    """Load and index the CSV on first use, refreshing it if it changes."""
 
-df["description"] = (
-    df["description"]
-    .fillna("")
-    .astype(str)
-)
+    global df
+    global vectorizer
+    global tfidf_matrix
+    global dataset_modified_time
 
-df["clean_description"] = (
-    df["description"]
-    .apply(clean_text)
-)
+    with _dataset_lock:
+        if not os.path.exists(DATASET_FILE):
+            df = pd.DataFrame()
+            vectorizer = None
+            tfidf_matrix = None
+            dataset_modified_time = None
+            return
 
+        current_modified_time = os.path.getmtime(DATASET_FILE)
+        if current_modified_time == dataset_modified_time:
+            return
 
-# ============================================================
-# TF-IDF MODEL
-# ============================================================
+        new_df = pd.read_csv(DATASET_FILE).reset_index(drop=True)
+        new_df["description"] = (
+            new_df["description"]
+            .fillna("")
+            .astype(str)
+        )
+        new_df["clean_description"] = new_df["description"].apply(clean_text)
 
-vectorizer = TfidfVectorizer()
+        new_vectorizer = TfidfVectorizer()
+        new_tfidf_matrix = new_vectorizer.fit_transform(
+            new_df["clean_description"]
+        )
 
-tfidf_matrix = vectorizer.fit_transform(
-    df["clean_description"]
-)
+        df = new_df
+        vectorizer = new_vectorizer
+        tfidf_matrix = new_tfidf_matrix
+        dataset_modified_time = current_modified_time
 
 
 # ============================================================
@@ -332,6 +339,13 @@ def find_matches(
     lost_report_id,
     top_n=5
 ):
+
+    load_dataset()
+
+    if df.empty:
+
+        return pd.DataFrame()
+
 
     lost_indices = df.index[
         df["report_id"].astype(str)

@@ -1,6 +1,6 @@
 """Unit tests for the pure scoring helpers in src/matcher.py.
 
-Importing matcher reads the production CSV once (read-only) to build
+The matcher reads the production CSV on first use (read-only) to build
 its TF-IDF index; these tests never write to it.
 """
 

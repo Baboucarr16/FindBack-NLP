@@ -1,7 +1,7 @@
 import os
+import threading
 import pandas as pd
 
-from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from matcher import (
@@ -38,18 +38,28 @@ embeddings = None
 
 dataset_modified_time = None
 
+model = None
+_model_lock = threading.Lock()
+_dataset_lock = threading.Lock()
 
-# ============================================================
-# LOAD SENTENCE-BERT MODEL
-# ============================================================
 
-print("\nLoading Sentence-BERT model...")
+def _get_model():
+    """Load Sentence-BERT once, on the first request that needs a match."""
 
-model = SentenceTransformer(
-    "sentence-transformers/all-MiniLM-L6-v2"
-)
+    global model
 
-print("Model loaded successfully!")
+    if model is None:
+        with _model_lock:
+            if model is None:
+                from sentence_transformers import SentenceTransformer
+
+                print("\nLoading Sentence-BERT model...")
+                model = SentenceTransformer(
+                    "sentence-transformers/all-MiniLM-L6-v2"
+                )
+                print("Model loaded successfully!")
+
+    return model
 
 
 # ============================================================
@@ -62,149 +72,60 @@ def load_dataset():
     global embeddings
     global dataset_modified_time
 
+    with _dataset_lock:
+        # --------------------------------------------------------
+        # Check whether dataset exists
+        # --------------------------------------------------------
 
-    # --------------------------------------------------------
-    # Check whether dataset exists
-    # --------------------------------------------------------
+        if not os.path.exists(DATASET_FILE):
 
-    if not os.path.exists(DATASET_FILE):
+            print("\nERROR: Dataset file not found:")
+            print(DATASET_FILE)
+            df = pd.DataFrame()
+            embeddings = None
+            dataset_modified_time = None
+            return
 
-        print(
-            "\nERROR: Dataset file not found:"
+        # --------------------------------------------------------
+        # Get file modification time and skip unchanged data
+        # --------------------------------------------------------
+
+        current_modified_time = os.path.getmtime(DATASET_FILE)
+        if current_modified_time == dataset_modified_time:
+            return
+
+        # --------------------------------------------------------
+        # Load and prepare the changed dataset
+        # --------------------------------------------------------
+
+        print("\n")
+        print("=" * 60)
+        print("REFRESHING FINDBACK DATASET")
+        print("=" * 60)
+
+        new_df = pd.read_csv(DATASET_FILE).reset_index(drop=True)
+        new_df["description"] = (
+            new_df["description"]
+            .fillna("")
+            .astype(str)
         )
 
-        print(
-            DATASET_FILE
-        )
+        print(f"Dataset loaded: {len(new_df)} reports")
 
-        df = pd.DataFrame()
+        # Encoding happens only when a match is requested, and the
+        # resulting vectors are reused until the CSV changes.
+        if len(new_df) > 0:
+            new_embeddings = _get_model().encode(
+                new_df["description"].tolist(),
+                normalize_embeddings=True,
+                show_progress_bar=True
+            )
+        else:
+            new_embeddings = None
 
-        embeddings = None
-
-        dataset_modified_time = None
-
-        return
-
-
-    # --------------------------------------------------------
-    # Get file modification time
-    # --------------------------------------------------------
-
-    current_modified_time = os.path.getmtime(
-        DATASET_FILE
-    )
-
-
-    # --------------------------------------------------------
-    # Dataset has not changed
-    # --------------------------------------------------------
-
-    if (
-        dataset_modified_time is not None
-        and
-        current_modified_time == dataset_modified_time
-    ):
-
-        return
-
-
-    # --------------------------------------------------------
-    # Dataset changed
-    # --------------------------------------------------------
-
-    print("\n")
-    print("=" * 60)
-    print("REFRESHING FINDBACK DATASET")
-    print("=" * 60)
-
-
-    # --------------------------------------------------------
-    # Load CSV
-    # --------------------------------------------------------
-
-    new_df = pd.read_csv(
-        DATASET_FILE
-    )
-
-
-    # --------------------------------------------------------
-    # Reset index
-    # --------------------------------------------------------
-
-    new_df = new_df.reset_index(
-        drop=True
-    )
-
-
-    # --------------------------------------------------------
-    # Make sure descriptions are strings
-    # --------------------------------------------------------
-
-    new_df["description"] = (
-        new_df["description"]
-        .fillna("")
-        .astype(str)
-    )
-
-
-    # --------------------------------------------------------
-    # Save dataset
-    # --------------------------------------------------------
-
-    df = new_df
-
-
-    print(
-        f"Dataset loaded: {len(df)} reports"
-    )
-
-
-    # --------------------------------------------------------
-    # Create semantic embeddings
-    # --------------------------------------------------------
-
-    print(
-        "\nCreating semantic embeddings..."
-    )
-
-
-    if len(df) > 0:
-
-        embeddings = model.encode(
-            df["description"].tolist(),
-            normalize_embeddings=True,
-            show_progress_bar=True
-        )
-
-    else:
-
-        embeddings = None
-
-
-    # --------------------------------------------------------
-    # Save modification time
-    # --------------------------------------------------------
-
-    dataset_modified_time = (
-        current_modified_time
-    )
-
-
-    print(
-        "Embeddings created!"
-    )
-
-
-    print(
-        "=" * 60
-    )
-
-
-# ============================================================
-# INITIAL DATASET LOAD
-# ============================================================
-
-load_dataset()
+        df = new_df
+        embeddings = new_embeddings
+        dataset_modified_time = current_modified_time
 
 
 # ============================================================
@@ -253,7 +174,7 @@ def find_semantic_matches_for_report(
     )
 
 
-    lost_embedding = model.encode(
+    lost_embedding = _get_model().encode(
         [lost_description],
         normalize_embeddings=True
     )
@@ -497,6 +418,10 @@ def find_semantic_matches(
     # --------------------------------------------------------
 
     load_dataset()
+
+    if df.empty:
+
+        return pd.DataFrame()
 
 
     # --------------------------------------------------------

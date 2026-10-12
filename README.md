@@ -70,14 +70,20 @@ python src/benchmark_evaluate.py --lost benchmark/dev/lost.csv --found benchmark
 ## Deployment
 
 Production entry point is `wsgi.py` (`Procfile` runs gunicorn with one
-worker and a 120 s timeout for model load). Set `FLASK_DEBUG=0` and
+worker and a 120 s request timeout). Set `FLASK_DEBUG=0` and
 `PORT` from the platform. Notes:
 
 * CSV storage is a local file: platforms with ephemeral filesystems
   will lose new submissions on restart. Configure Supabase
   (`db/README.md`) for persistent storage.
-* The Sentence-BERT model downloads (~90 MB) and loads into memory at
-  startup; allow extra boot time and ~1 GB RAM.
+* Startup does not load the Sentence-BERT model or read/index the CSV.
+  The model is initialized once per worker on its first semantic-match
+  request, and the CSV is read and encoded then; cached model and
+  embeddings are reused until the CSV changes. The first matching
+  request therefore takes longer and uses more memory than startup.
+* The checked-in `Procfile` uses the existing `wsgi:application`
+  entry point with one worker. Render services with a custom start
+  command should use the same entry point and worker count.
 * No secrets are used; do not add credentials to the repo.
 
 Exact next steps depend on the chosen host (Render/Heroku/VPS) and
