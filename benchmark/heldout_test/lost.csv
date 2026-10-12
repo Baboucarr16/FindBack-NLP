@@ -1,0 +1,2 @@
+report_id,report_type,item_category,description,organization_type,organization_name,campus_or_branch,building_or_terminal,floor_or_level,specific_area,date,approx_time,status
+EXAMPLE-LOST-101,Lost,Wallet,EXAMPLE placeholder only — remove before real evaluation.,Mall,Example Mall,Main Branch,Main Building,Ground Floor,Food Court,2026-02-01,13:00,Lost

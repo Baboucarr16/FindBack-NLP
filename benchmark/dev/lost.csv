@@ -1,0 +1,2 @@
+report_id,report_type,item_category,description,organization_type,organization_name,campus_or_branch,building_or_terminal,floor_or_level,specific_area,date,approx_time,status
+EXAMPLE-LOST-001,Lost,Backpack,EXAMPLE placeholder only — remove before real evaluation.,University,Example University,Main Campus,Central Library,2nd Floor,Reading Room,2026-01-01,10:00,Lost

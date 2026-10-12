@@ -2,6 +2,11 @@ Flask>=3.1,<4
 pandas>=2.2,<4
 scikit-learn>=1.5,<2
 sentence-transformers>=3.0,<7
+# Supabase client (PostgreSQL + Auth). Imported lazily; the app runs
+# in local CSV mode without credentials.
+supabase>=2.0,<3
+# Local .env file loading (optional, development convenience).
+python-dotenv>=1.0,<2
 # Hugging Face Hub uses this backend to download model assets.
 hf-xet>=1.6,<2
 gunicorn>=23,<24; platform_system != "Windows"

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>FindBack - Claim Item</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <div class="hero">
+
+        <div class="logo">
+            FindBack
+        </div>
+
+        <h1>
+            Claim this item
+        </h1>
+
+        <p>
+            Describe why this found item is yours. Only you and
+            the report owner can see this claim. Do not include
+            phone numbers or addresses.
+        </p>
+
+    </div>
+
+
+    {% if error %}
+
+    <div class="alert alert-error" role="alert">
+        {{ error }}
+    </div>
+
+    {% endif %}
+
+
+    {% if report %}
+
+    <div class="section">
+
+        <p>
+            <strong>
+                {{ report["item_category"] }}
+            </strong>
+        </p>
+
+        <p>
+            {{ report["description"] }}
+        </p>
+
+    </div>
+
+
+    <form
+        action="/claims/new"
+        method="POST"
+        class="report-form"
+    >
+
+        <input
+            type="hidden"
+            name="report_id"
+            value="{{ report['id'] }}"
+        >
+
+        <div class="section">
+
+            <label>
+                Why is this item yours?
+            </label>
+
+            <textarea
+                name="claim_note"
+                rows="4"
+                placeholder="Example: unique sticker, engraving, contents inside."
+            ></textarea>
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="submit-button"
+        >
+
+            File claim
+
+        </button>
+
+
+    </form>
+
+    {% endif %}
+
+
+    <a
+        href="/claims"
+        class="back-button"
+    >
+
+        ← Back to claims
+
+    </a>
+
+
+</div>
+
+</body>
+
+</html>

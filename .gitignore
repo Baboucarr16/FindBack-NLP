@@ -1,4 +1,5 @@
 venv/
+.env
 src_backup/
 __pycache__/
 *.pyc

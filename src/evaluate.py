@@ -47,7 +47,7 @@ print("                 FINDBACK EVALUATION")
 print("=" * 70)
 
 print(
-    f"\nTesting {len(known_matches)} known Lost → Found pairs..."
+    f"\nTesting {len(known_matches)} known Lost -> Found pairs..."
 )
 
 

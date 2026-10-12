@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>FindBack - Register</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <div class="hero">
+
+        <div class="logo">
+            FindBack
+        </div>
+
+        <h1>
+            Create an account
+        </h1>
+
+        <p>
+            Accounts link your reports to you and enable
+            private claims and notifications.
+        </p>
+
+    </div>
+
+
+    {% if error %}
+
+    <div class="alert alert-error" role="alert">
+        {{ error }}
+    </div>
+
+    {% endif %}
+
+
+    {% if message %}
+
+    <div class="alert alert-success" role="status">
+        {{ message }}
+    </div>
+
+    {% endif %}
+
+
+    {% if not auth_enabled %}
+
+    <div class="alert alert-error" role="alert">
+        Authentication is not configured on this server yet.
+        The app continues to work anonymously in local mode.
+    </div>
+
+    {% endif %}
+
+
+    <form
+        action="/register"
+        method="POST"
+        class="report-form"
+    >
+
+        <div class="section">
+
+            <label>
+                Email
+            </label>
+
+            <input
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                required
+            >
+
+            <label>
+                Password (at least 6 characters)
+            </label>
+
+            <input
+                type="password"
+                name="password"
+                minlength="6"
+                required
+            >
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="submit-button"
+        >
+
+            Register
+
+        </button>
+
+
+    </form>
+
+
+    <p>
+        Already have an account?
+        <a href="/login">Log in</a>
+    </p>
+
+
+    <a
+        href="/"
+        class="back-button"
+    >
+
+        ← Back to FindBack
+
+    </a>
+
+
+</div>
+
+</body>
+
+</html>

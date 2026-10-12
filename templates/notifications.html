@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>FindBack - Notifications</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <div class="hero">
+
+        <div class="logo">
+            FindBack
+        </div>
+
+        <h1>
+            Notifications
+        </h1>
+
+    </div>
+
+
+    {% if error %}
+
+    <div class="alert alert-error" role="alert">
+        {{ error }}
+    </div>
+
+    {% endif %}
+
+
+    {% if notifications %}
+
+    <ul>
+
+        {% for note in notifications %}
+
+        <li>
+            <strong>
+                {{ note["title"] }}
+            </strong>
+            <p>
+                {{ note["body"] }}
+            </p>
+        </li>
+
+        {% endfor %}
+
+    </ul>
+
+    {% else %}
+
+    <p>
+        No notifications yet.
+    </p>
+
+    {% endif %}
+
+
+    <a
+        href="/"
+        class="back-button"
+    >
+
+        ← Back to FindBack
+
+    </a>
+
+
+</div>
+
+</body>
+
+</html>

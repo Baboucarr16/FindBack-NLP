@@ -1,0 +1,28 @@
+{
+  "report_columns": [
+    "report_id",
+    "report_type",
+    "item_category",
+    "description",
+    "organization_type",
+    "organization_name",
+    "campus_or_branch",
+    "building_or_terminal",
+    "floor_or_level",
+    "specific_area",
+    "date",
+    "approx_time",
+    "status"
+  ],
+  "labels_columns": ["lost_id", "expected_found_id", "has_match"],
+  "labels_contract": {
+    "lost_id": "Must match a report_id in lost.csv with report_type Lost.",
+    "expected_found_id": "Must match a report_id in found.csv when has_match is 1; empty string when has_match is 0.",
+    "has_match": "1 if a verified correct found report exists in found.csv, else 0 for no-valid-match cases."
+  },
+  "notes": [
+    "Same column order as dataset/findback_reports.csv for compatibility.",
+    "Placeholder EXAMPLE rows must be removed before real evaluation.",
+    "Dates use YYYY-MM-DD, times use HH:MM 24h."
+  ]
+}

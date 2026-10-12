@@ -52,7 +52,7 @@ print("                 FINDBACK MODEL COMPARISON")
 print("=" * 75)
 
 print(
-    f"\nTesting {len(known_matches)} Lost → Found pairs."
+    f"\nTesting {len(known_matches)} Lost -> Found pairs."
 )
 
 print(
