@@ -1,6 +1,9 @@
 venv/
 .env
 src_backup/
+outputs/
+.pytest*/
+.pytest_cache/
 __pycache__/
 *.pyc
 .vscode/

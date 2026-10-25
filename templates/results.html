@@ -1,202 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Review found-item reports ranked by similarity to your FindBack search.">
-    <title>FindBack — Search results</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-
-<body>
-    <div class="site-shell">
-        <header class="site-header">
-            <a class="brand" href="/" aria-label="FindBack home">
-                <span class="brand-symbol" aria-hidden="true">f</span>
-                <span class="brand-wordmark">findback</span>
-            </a>
-            <nav class="main-nav" aria-label="Main navigation">
-                <a href="/">Search items</a>
-                <a class="nav-cta" href="/found">Report a found item</a>
-            </nav>
-        </header>
-
-        <main class="results-main">
-            <section class="results-heading">
-                <p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span> Search results</p>
-                <h1>Take a closer look.</h1>
-                <p>These found-item reports are ranked by their weighted similarity to the details you shared.</p>
-            </section>
-
-            <section class="report-summary" aria-labelledby="report-summary-title">
-                <div class="summary-heading">
-                    <div>
-                        <p class="eyebrow">Your search</p>
-                        <h2 id="report-summary-title">{{ lost_report["item_category"] }}</h2>
-                    </div>
-                    <a class="summary-edit" href="/">Search again <span aria-hidden="true">↗</span></a>
-                </div>
-                <p class="summary-description">{{ lost_report["description"] }}</p>
-                <dl class="summary-facts">
-                    <div>
-                        <dt>Last known location</dt>
-                        <dd>
-                            {{ lost_report["organization_name"] }}
-                            {% if lost_report["campus_or_branch"] %} / {{ lost_report["campus_or_branch"] }}{% endif %}
-                            {% if lost_report["building_or_terminal"] %} / {{ lost_report["building_or_terminal"] }}{% endif %}
-                            {% if lost_report["floor_or_level"] %} / {{ lost_report["floor_or_level"] }}{% endif %}
-                            {% if lost_report["specific_area"] %} / {{ lost_report["specific_area"] }}{% endif %}
-                        </dd>
-                    </div>
-                    <div>
-                        <dt>Date and time</dt>
-                        <dd>{{ lost_report["date"] }} at {{ lost_report["approx_time"] }}</dd>
-                    </div>
-                </dl>
-            </section>
-
-            {% if min_score is not none and total_candidates > matches|length %}
-            <p class="filter-note" role="status">
-                {{ total_candidates - matches|length }} weaker candidate(s) below the configured
-                minimum score are hidden.
-            </p>
-            {% endif %}
-
-            {% if matches %}
-            <section class="candidate-section" aria-labelledby="candidate-title">
-                <div class="candidate-heading">
-                    <div>
-                        <p class="eyebrow">Closest reports</p>
-                        <h2 id="candidate-title">Review each candidate</h2>
-                        <p class="similarity-note">
-                            Scores measure text and context similarity, not a guaranteed match.
-                            Verify the details with the venue before claiming an item.
-                        </p>
-                    </div>
-                    <p class="score-disclaimer">Similarity scores are not probabilities of recovery.</p>
-                </div>
-
-                <div class="candidate-list">
-                    {% for match in matches %}
-                    <article class="candidate-card">
-                        <div class="candidate-topline">
-                            <div class="candidate-rank">
-                                <span class="rank-number">{{ "%02d"|format(loop.index) }}</span>
-                                <span class="rank-label">Ranked candidate</span>
-                            </div>
-                            <span class="report-reference">Report {{ match["report_id"] }}</span>
-                        </div>
-
-                        <div class="candidate-content">
-                            <div class="candidate-details">
-                                <h3>{{ match["item_category"] }}</h3>
-                                <p class="candidate-description">{{ match["description"] }}</p>
-                                <dl class="candidate-facts">
-                                    <div>
-                                        <dt>Found at</dt>
-                                        <dd>
-                                            {{ match["organization_name"] }}
-                                            {% if match["campus_or_branch"] %} / {{ match["campus_or_branch"] }}{% endif %}
-                                            {% if match["building_or_terminal"] %} / {{ match["building_or_terminal"] }}{% endif %}
-                                            {% if match["floor_or_level"] %} / {{ match["floor_or_level"] }}{% endif %}
-                                            {% if match["specific_area"] %} / {{ match["specific_area"] }}{% endif %}
-                                        </dd>
-                                    </div>
-                                    <div>
-                                        <dt>Found on</dt>
-                                        <dd>{{ match["date"] }} at {{ match["approx_time"] }}</dd>
-                                    </div>
-                                </dl>
-                            </div>
-
-                            <aside class="match-score" aria-label="Similarity breakdown">
-                                <div class="overall-score">
-                                    <span>Overall weighted similarity</span>
-                                    <strong>{{ "%.1f"|format(match["final_score"] * 100) }}<small>%</small></strong>
-                                    <progress
-                                        class="overall-meter"
-                                        max="1"
-                                        value="{{ match['final_score'] }}"
-                                        aria-label="Overall weighted similarity"
-                                    >{{ "%.1f"|format(match["final_score"] * 100) }}%</progress>
-                                </div>
-
-                                <div class="score-breakdown">
-                                    <h4>Why this match?</h4>
-                                    <p>Compare the four similarity signals used to rank this report.</p>
-                                    {% if match["explanation"] %}
-                                    <p class="evidence-summary">{{ match["explanation"]["summary"] }}</p>
-                                    <ul class="evidence-list">
-                                        {% for point in match["explanation"]["supporting"] %}
-                                        <li class="positive">{{ point }}</li>
-                                        {% endfor %}
-                                        {% for point in match["explanation"]["conflicting"] %}
-                                        <li class="warning">{{ point }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                    {% endif %}
-                                    <div class="score-row">
-                                        <span>Item description</span>
-                                        <strong>{{ "%.0f"|format(match["semantic_score"] * 100) }}%</strong>
-                                        <progress max="1" value="{{ match['semantic_score'] }}" aria-label="Item description similarity">{{ "%.0f"|format(match["semantic_score"] * 100) }}%</progress>
-                                    </div>
-                                    <div class="score-row">
-                                        <span>Location</span>
-                                        <strong>{{ "%.0f"|format(match["location_score"] * 100) }}%</strong>
-                                        <progress max="1" value="{{ match['location_score'] }}" aria-label="Location similarity">{{ "%.0f"|format(match["location_score"] * 100) }}%</progress>
-                                    </div>
-                                    <div class="score-row">
-                                        <span>Time</span>
-                                        <strong>{{ "%.0f"|format(match["time_score"] * 100) }}%</strong>
-                                        <progress max="1" value="{{ match['time_score'] }}" aria-label="Time similarity">{{ "%.0f"|format(match["time_score"] * 100) }}%</progress>
-                                    </div>
-                                    <div class="score-row">
-                                        <span>Category</span>
-                                        <strong>{{ "%.0f"|format(match["category_score"] * 100) }}%</strong>
-                                        <progress max="1" value="{{ match['category_score'] }}" aria-label="Category similarity">{{ "%.0f"|format(match["category_score"] * 100) }}%</progress>
-                                    </div>
-                                </div>
-                            </aside>
-                        </div>
-                    </article>
-                    {% endfor %}
-                </div>
-            </section>
-            {% else %}
-            <section class="empty-state" aria-labelledby="empty-title">
-                <span class="empty-mark" aria-hidden="true">
-                    <svg viewBox="0 0 48 48" focusable="false">
-                        <circle cx="21" cy="21" r="12"/>
-                        <path d="m30 30 10 10M16 21h10"/>
-                    </svg>
-                </span>
-                <p class="eyebrow">No candidate reports</p>
-                <h2 id="empty-title">No potential matches found</h2>
-                {% if min_score is not none and total_candidates > 0 %}
-                <p>No candidates met the configured minimum similarity score. Try a new search or review the minimum-score setting.</p>
-                {% else %}
-                <p>There are no found-item reports in the current results for this search.</p>
-                {% endif %}
-                <a class="button button-primary" href="/">Adjust your search <span class="button-arrow" aria-hidden="true">↗</span></a>
-            </section>
-            {% endif %}
-
-            <div class="results-footer-action">
-                <a class="text-link" href="/">← Start a new search</a>
-                <a class="button button-secondary" href="/found">Report a found item</a>
-            </div>
-        </main>
-
-        <footer class="site-footer">
-            <a class="brand footer-brand" href="/" aria-label="FindBack home">
-                <span class="brand-symbol" aria-hidden="true">f</span>
-                <span class="brand-wordmark">findback</span>
-            </a>
-            <p>A little more clarity when something goes missing.</p>
-            <a href="/found">Report a found item <span aria-hidden="true">→</span></a>
-        </footer>
+{% extends "base.html" %}
+{% set page_title = "Search results — FindBack" %}
+{% set page_description = "Review found-item reports ranked by similarity to your search." %}
+{% set body_class = "results-page" %}
+{% block content %}
+<section class="results-intro" aria-labelledby="results-title">
+    <p class="eyebrow"><span class="eyebrow-index">YOUR SEARCH / RESULTS</span></p>
+    <h1 id="results-title">Here are the<br><span>closest leads.</span></h1>
+    <p>These are candidates ranked by weighted similarity. Review the details carefully; no result confirms ownership.</p>
+</section>
+{% if local_demo_mode %}
+<p class="demo-data-note" role="note">Local demo data: the checked-in report examples are synthetic.</p>
+{% endif %}
+<section class="search-receipt" aria-labelledby="receipt-title">
+    <div class="receipt-marker"><span>SEARCH RECORD</span><strong>01</strong></div>
+    <div class="receipt-content">
+        <div class="receipt-heading"><div><p class="eyebrow">Your lost-item report</p><h2 id="receipt-title">{{ lost_report["item_category"] }}</h2></div><a class="text-link" href="/">Edit search <span aria-hidden="true">↗</span></a></div>
+        <p class="receipt-description">{{ lost_report["description"] }}</p>
+        <dl class="receipt-facts"><div><dt>Last known place</dt><dd>{{ lost_report["organization_name"] }}{% if lost_report["campus_or_branch"] %} / {{ lost_report["campus_or_branch"] }}{% endif %}{% if lost_report["building_or_terminal"] %} / {{ lost_report["building_or_terminal"] }}{% endif %}{% if lost_report["floor_or_level"] %} / {{ lost_report["floor_or_level"] }}{% endif %}{% if lost_report["specific_area"] %} / {{ lost_report["specific_area"] }}{% endif %}</dd></div><div><dt>Last seen</dt><dd>{{ lost_report["date"] }} · {{ lost_report["approx_time"] }}</dd></div></dl>
     </div>
-</body>
-
-</html>
+</section>
+{% if min_score is not none and total_candidates > matches|length %}<p class="filter-note" role="status">{{ total_candidates - matches|length }} lower-scoring candidate(s) are hidden by the configured minimum.</p>{% endif %}
+{% if matches %}
+<section class="candidate-section" aria-labelledby="candidate-title">
+    <div class="candidate-heading"><div><p class="eyebrow"><span class="eyebrow-index">REVIEW QUEUE / {{ matches|length }}</span></p><h2 id="candidate-title">Potential found reports</h2><p>Compare what lines up and what does not before taking a next step.</p></div><p class="score-disclaimer">Weighted similarity is a guide, not a probability of recovery.</p></div>
+    <div class="candidate-list">
+        {% for match in matches %}
+        <article class="candidate-card">
+            <header class="candidate-topline">
+                <p class="candidate-kicker"><span class="candidate-number">LEAD / {{ "%02d"|format(loop.index) }}</span><span>REPORT {{ match["report_id"] }}</span></p>
+                <span class="candidate-classification">POTENTIAL FOUND REPORT</span>
+            </header>
+            <div class="candidate-main">
+                <div class="candidate-details"><div class="candidate-title-line"><span class="item-stamp" aria-hidden="true">{{ match["item_category"][:1]|upper }}</span><div><p class="eyebrow">Item category</p><h3>{{ match["item_category"] }}</h3></div></div><p class="candidate-description">{{ match["description"] }}</p>
+                    <dl class="candidate-facts"><div><dt>Found at</dt><dd>{{ match["organization_name"] }}{% if match["campus_or_branch"] %} / {{ match["campus_or_branch"] }}{% endif %}{% if match["building_or_terminal"] %} / {{ match["building_or_terminal"] }}{% endif %}{% if match["floor_or_level"] %} / {{ match["floor_or_level"] }}{% endif %}{% if match["specific_area"] %} / {{ match["specific_area"] }}{% endif %}</dd></div><div><dt>Found on</dt><dd>{{ match["date"] }} · {{ match["approx_time"] }}</dd></div></dl>
+                    {% if session.get('findback_user') and match.get('id') %}<a class="button button-secondary candidate-action" href="{{ url_for('claim_new', report_id=match['id']) }}">Review claim options <span aria-hidden="true">↗</span></a>{% endif %}
+                </div>
+                <aside class="match-score" aria-label="Similarity evidence for candidate {{ loop.index }}">
+                    <div class="score-head"><div><p class="eyebrow">Overall similarity</p><p class="score-value">{{ "%.1f"|format(match["final_score"] * 100) }}<span>%</span></p></div><span class="score-rank">RANK<br><strong>{{ "%02d"|format(loop.index) }}</strong></span></div>
+                    <progress max="1" value="{{ match['final_score'] }}" aria-label="Overall weighted similarity, {{ '%.1f'|format(match['final_score'] * 100) }} percent">{{ "%.1f"|format(match["final_score"] * 100) }}%</progress>
+                    <div class="evidence-heading"><h4>Why it surfaced</h4><span>4 WEIGHTED COMPONENTS</span></div>
+                    {% if match["explanation"] %}<p class="evidence-summary">{{ match["explanation"]["summary"] }}</p><ul class="evidence-list">{% for point in match["explanation"]["supporting"] %}<li class="positive"><span aria-hidden="true">+</span>{{ point }}</li>{% endfor %}{% for point in match["explanation"]["conflicting"] %}<li class="warning"><span aria-hidden="true">!</span>{{ point }}</li>{% endfor %}</ul>{% endif %}
+                    <div class="score-rows">
+                        <div class="score-row"><span>Description</span><strong>{{ "%.0f"|format(match["semantic_score"] * 100) }}%</strong><progress max="1" value="{{ match['semantic_score'] }}" aria-label="Description similarity, {{ '%.0f'|format(match['semantic_score'] * 100) }} percent"></progress></div>
+                        <div class="score-row"><span>Location</span><strong>{{ "%.0f"|format(match["location_score"] * 100) }}%</strong><progress max="1" value="{{ match['location_score'] }}" aria-label="Location similarity, {{ '%.0f'|format(match['location_score'] * 100) }} percent"></progress></div>
+                        <div class="score-row"><span>Time</span><strong>{{ "%.0f"|format(match["time_score"] * 100) }}%</strong><progress max="1" value="{{ match['time_score'] }}" aria-label="Time similarity, {{ '%.0f'|format(match['time_score'] * 100) }} percent"></progress></div>
+                        <div class="score-row"><span>Category</span><strong>{{ "%.0f"|format(match["category_score"] * 100) }}%</strong><progress max="1" value="{{ match['category_score'] }}" aria-label="Category similarity, {{ '%.0f'|format(match['category_score'] * 100) }} percent"></progress></div>
+                    </div>
+                </aside>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% else %}
+<section class="empty-state" aria-labelledby="empty-title"><span class="empty-mark" aria-hidden="true">⌕</span><p class="eyebrow"><span class="eyebrow-index">NO LEADS THIS TIME</span></p><h2 id="empty-title">No potential matches found.</h2>{% if min_score is not none and total_candidates > 0 %}<p>No candidates met the current similarity threshold. Try another search with more detail.</p>{% else %}<p>There are no active found reports in the results for this search. You can check back later or add a useful lead by reporting an item you found.</p>{% endif %}<a class="button button-primary" href="/">Adjust your search <span aria-hidden="true">↗</span></a></section>
+{% endif %}
+<div class="results-footer-action"><a class="text-link" href="/">← Start a new search</a><a class="button button-secondary" href="/found">Report a found item</a></div>
+{% endblock %}

@@ -2,6 +2,7 @@ import pandas as pd
 
 from matcher import find_matches
 from semantic_matcher import find_semantic_matches
+from artifact_paths import output_path
 
 
 # ============================================================
@@ -395,9 +396,8 @@ comparison_df = pd.DataFrame(
 )
 
 
-output_file = (
-    "dataset/model_comparison_results.csv"
-)
+output_file = output_path("model_comparison_results.csv")
+output_file.parent.mkdir(parents=True, exist_ok=True)
 
 
 comparison_df.to_csv(

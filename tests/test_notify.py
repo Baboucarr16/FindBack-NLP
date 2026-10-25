@@ -109,8 +109,10 @@ def test_service_client_uses_service_key(monkeypatch, service_env):
 
 def test_recipient_always_lost_owner(service_env, monkeypatch):
     client = _service([
-        {"id": "l1", "owner_id": "owner-A", "status": "active"},
-        {"id": "f1", "owner_id": "owner-B", "status": "active"},
+        {"id": "l1", "owner_id": "owner-A", "status": "active",
+         "report_type": "Lost"},
+        {"id": "f1", "owner_id": "owner-B", "status": "active",
+         "report_type": "Found"},
     ], monkeypatch)
     saved = notify_match_owner(
         {"id": "l1", "owner_id": "owner-A"},
@@ -132,8 +134,10 @@ def test_no_owner_no_write(service_env, monkeypatch):
 def test_changed_owner_blocks_write(service_env, monkeypatch):
     # Lost report now belongs to someone else: stale caller data must
     # not notify the old owner.
-    _service([{"id": "l1", "owner_id": "owner-C", "status": "active"},
-              {"id": "f1", "owner_id": "owner-B", "status": "active"}],
+    _service([{"id": "l1", "owner_id": "owner-C", "status": "active",
+               "report_type": "Lost"},
+              {"id": "f1", "owner_id": "owner-B", "status": "active",
+               "report_type": "Found"}],
              monkeypatch)
     assert notify_match_owner({"id": "l1", "owner_id": "owner-A"},
                               {"id": "f1"}, 0.9) is None
@@ -148,10 +152,24 @@ def test_inactive_or_missing_reports_block_write(service_env, monkeypatch):
                               {"id": "missing"}, 0.9) is None
 
 
+def test_notification_rejects_wrong_report_types(service_env, monkeypatch):
+    client = _service([
+        {"id": "l1", "owner_id": "owner-A", "status": "active",
+         "report_type": "Found"},
+        {"id": "f1", "owner_id": "owner-B", "status": "active",
+         "report_type": "Lost"},
+    ], monkeypatch)
+    assert notify_match_owner({"id": "l1", "owner_id": "owner-A"},
+                              {"id": "f1"}, 0.9) is None
+    assert client.tables["notifications"].inserted == []
+
+
 def test_duplicate_is_idempotent(service_env, monkeypatch):
     client = _service([
-        {"id": "l1", "owner_id": "owner-A", "status": "active"},
-        {"id": "f1", "owner_id": "owner-B", "status": "active"},
+        {"id": "l1", "owner_id": "owner-A", "status": "active",
+         "report_type": "Lost"},
+        {"id": "f1", "owner_id": "owner-B", "status": "active",
+         "report_type": "Found"},
     ], monkeypatch)
 
     class DupTable(FakeTable):
@@ -168,8 +186,10 @@ def test_duplicate_is_idempotent(service_env, monkeypatch):
 
 def test_body_contains_no_caller_text(service_env, monkeypatch):
     client = _service([
-        {"id": "l1", "owner_id": "owner-A", "status": "active"},
-        {"id": "f1", "owner_id": "owner-B", "status": "active"},
+        {"id": "l1", "owner_id": "owner-A", "status": "active",
+         "report_type": "Lost"},
+        {"id": "f1", "owner_id": "owner-B", "status": "active",
+         "report_type": "Found"},
     ], monkeypatch)
     notify_match_owner(
         {"id": "l1", "owner_id": "owner-A"},

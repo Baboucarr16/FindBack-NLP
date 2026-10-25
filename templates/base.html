@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="description" content="{{ page_description|default('A clear, thoughtful way to reconnect lost belongings with the people looking for them.') }}">
+    <title>{{ page_title|default('FindBack — Recovery, made clearer') }}</title>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ body_class|default('') }}">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="site-shell">
+        <header class="site-header">
+            <a class="brand" href="/" aria-label="FindBack home">
+                <span class="brand-mark" aria-hidden="true"><span></span></span>
+                <span>findback<span class="brand-period">.</span></span>
+            </a>
+            <nav class="main-nav" aria-label="Main navigation">
+                <a href="/" {% if request.path == '/' %}aria-current="page"{% endif %}>Search</a>
+                <a href="/found" {% if request.path == '/found' %}aria-current="page"{% endif %}>I found something</a>
+                <a class="nav-cta" href="/#report-loss">Start a search <span aria-hidden="true">↗</span></a>
+                <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark theme">Dark theme</button>
+            </nav>
+        </header>
+        <main id="main-content">
+            {% block content %}{% endblock %}
+        </main>
+        <footer class="site-footer">
+            <a class="brand footer-brand" href="/" aria-label="FindBack home">
+                <span class="brand-mark" aria-hidden="true"><span></span></span>
+                <span>findback<span class="brand-period">.</span></span>
+            </a>
+            <p>Careful details make a better way back.</p>
+            <a href="/found">Found an item? Add a report <span aria-hidden="true">↗</span></a>
+        </footer>
+    </div>
+</body>
+</html>

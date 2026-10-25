@@ -1,52 +1,74 @@
 # FindBack database (Supabase PostgreSQL)
 
-## Tables (`db/schema.sql`)
+## Tables
 
-| Table | Purpose |
-|---|---|
-| `profiles` | One row per Supabase Auth user (`id` references `auth.users`). |
-| `reports` | Lost/Found reports, user-owned via `owner_id`. `legacy_report_id` preserves CSV IDs (`FB001`…). No contact columns on purpose. |
-| `match_results` | Persisted matcher output per lost→found pair (all four component scores + final). Unique per pair so re-runs are idempotent. |
-| `claims` | Private ownership claims on a found report (`pending`/`approved`/`rejected`/`withdrawn`, one active claim per user+report). |
-| `notifications` | Per-user inbox. Partial unique index on `(user_id, dedupe_key)` for unread rows makes automatic matching duplicate-safe. |
+`db/schema.sql` defines `profiles`, `reports`, `match_results`, `claims`,
+and `notifications`. **Security blocker:** the current report SELECT policy
+allows public reads of every active report, including Lost reports. It does
+not yet implement the intended Found-public/Lost-private boundary. Do not use
+this SQL for a public/shared deployment. Profiles are self-readable; match
+results are visible only to owners of either report; claims are visible to
+their claimant and the found-report owner; notifications are private to their
+recipient. No report contact fields are stored.
 
-Timestamps on every table; `updated_at` maintained by trigger on `reports`.
+The browser uses no Supabase client or service-role credential. Flask
+uses the anon key with the signed-in user's session for ordinary reads
+and writes. The service-role key is server-side only and is used by the
+CSV importer and `src/notify.py` for cross-user notifications. The
+notification writer rechecks report ownership and active state before
+writing.
 
-## Access control
+## Ordered schema setup
 
-Row Level Security is enabled on all tables (see policy section in
-`schema.sql`): active reports are publicly readable, writes are
-owner-scoped, claims are visible only to claimant + report owner,
-notifications strictly to their owner. The browser must only ever use
-the **anon** key; the **service-role** key stays in the server
-environment for the one-off migration and the server-side
-notification writer (`src/notify.py`).
+1. Use only a disposable/test Supabase project; never run the current draft
+   SQL against production or a shared project.
+2. `db/schema.sql` and `db/migrations/004_core_dataflow_security.sql` are
+   drafts. Their active-report policy exposes active Lost reports. They may
+   only be used for isolated policy review with synthetic data until a
+   trusted matching design and private Lost-report policy are implemented.
+   Migration 004 assumes the five tables from `schema.sql`
+   exist, but does not depend on drafts 002 or 003. It reconciles the
+   policy and privilege set, adds report-submission idempotency, permits
+   closed claims to be re-filed, and makes notification dedupe permanent.
+3. Do not apply migrations 002 or 003 separately for the current app;
+   004 replaces their policy behavior. Their presence in the repository
+   is not evidence they were applied to a project.
+4. Copy `.env.example` to `.env` and fill in `SUPABASE_URL`,
+   `SUPABASE_ANON_KEY`, server-only `SUPABASE_SERVICE_ROLE_KEY`, and a
+   random `FLASK_SECRET_KEY`. Use `FLASK_DEBUG=0` and HTTPS in
+   production. Configure Supabase Auth Site URL and allowed redirect
+   URLs for the app origin when email confirmation is enabled.
+5. Install dependencies with `pip install -r requirements.txt`.
+6. Validate the CSV import without writing: `python db/migrate_csv.py`.
+   `python db/migrate_csv.py --execute` inserts rows and leaves the CSV
+   untouched. It writes to the project named by `SUPABASE_URL`; do not
+   point it at production during testing.
 
-## Notification writes (least privilege, by design)
+Migration 004 includes rollback notes. Its policy rollback requires a
+reviewed policy snapshot; blindly restoring the old policies would
+reopen profile, match, and claim access. Index creation intentionally
+fails if existing data contains duplicate dedupe keys or multiple open
+claims for the same user/report pair.
 
-End-user clients can only write their own inbox
-(`notifications_insert_own`, see `db/migrations/002_match_notify_writes.sql`),
-so cross-user match notices are sent by the server with the
-service-role key: the recipient is re-derived from the lost report's
-owner, both reports are re-verified, and message text is built
-server-side. Without the key, notifying is skipped and counted, never
-failed loudly. RLS is never loosened for arbitrary inbox writes.
+## Storage modes
 
-## Setup (requires a Supabase project)
+With `FINDBACK_STORE=csv` (the default), the app uses
+`dataset/findback_reports.csv` anonymously. With
+`FINDBACK_STORE=supabase`, users must sign in to persist either Lost or
+Found reports. Search reads active Found reports from Supabase and uses
+the existing Sentence-BERT matching algorithm and weights. If Supabase
+is selected without credentials, report routes show a configuration
+error rather than silently switching to CSV.
 
-1. Create a project at https://supabase.com, open the SQL editor, run `db/schema.sql` once.
-2. After reviewing, run `db/migrations/002_match_notify_writes.sql` once to let the app persist automatic match pairs and owner-addressed notifications (service-role calls bypass RLS and are unaffected either way).
-3. Copy `.env.example` to `.env` and fill in:
-   - `SUPABASE_URL`, `SUPABASE_ANON_KEY` (app + browser-safe usage)
-   - `SUPABASE_SERVICE_ROLE_KEY` (server-side only: migration + `src/notify.py`; never the browser, never commit)
-   - `FLASK_SECRET_KEY` (session signing, generate a random value)
-3. `pip install -r requirements.txt` (adds `supabase`, `python-dotenv`).
-4. Dry-run the migration (no credentials needed, CSV only read):
-   `python db/migrate_csv.py`
-5. `python db/migrate_csv.py --execute` (imports rows; skips already-migrated IDs; CSV untouched).
+Google OAuth is not implemented. If needed later, separately enable the
+provider in Supabase Auth, configure its provider credentials and
+redirect allowlist, and add an application callback/return route.
 
-## CSV mode (default, no credentials)
+## Phase 2 SQL status
 
-Without `SUPABASE_URL`/`SUPABASE_ANON_KEY` the app runs exactly as
-before on `dataset/findback_reports.csv` (anonymous, single-user).
-Auth routes render a clear "not configured" message instead of failing.
+Migration 004 is prepared but has not been applied. Its RLS behavior has
+only been reviewed in code and checked by static regression tests. No
+local Supabase/Postgres test database was available, and no production
+connection was made. Policy execution, grants, migration rerun behavior,
+and index creation against existing data remain unverified until tested
+on an isolated Supabase project.

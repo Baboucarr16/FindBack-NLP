@@ -148,260 +148,91 @@ def find_semantic_matches_for_report(
     load_dataset()
 
 
-    # --------------------------------------------------------
-    # Check dataset
-    # --------------------------------------------------------
-
-    if df.empty:
-
+    if df.empty or embeddings is None:
         return pd.DataFrame()
-
-
-    if embeddings is None:
-
-        return pd.DataFrame()
-
-
-    # --------------------------------------------------------
-    # Convert lost description to embedding
-    # --------------------------------------------------------
-
-    lost_description = str(
-        lost_report.get(
-            "description",
-            ""
-        )
-    )
-
 
     lost_embedding = _get_model().encode(
-        [lost_description],
+        [str(lost_report.get("description", "") or "")],
         normalize_embeddings=True
     )
+    all_scores = cosine_similarity(lost_embedding, embeddings).flatten()
+    found_reports = []
+    found_scores = []
+    for index, report in df.iterrows():
+        if str(report.get("report_type", "")).strip().lower() != "found":
+            continue
+        found_reports.append(report.to_dict())
+        found_scores.append(float(all_scores[index]))
+    return find_semantic_matches_against_reports(
+        lost_report, found_reports, top_n=top_n,
+        _semantic_scores=found_scores
+    )
 
 
-    # --------------------------------------------------------
-    # Calculate semantic similarity
-    # --------------------------------------------------------
+def find_semantic_matches_against_reports(lost_report, found_reports,
+                                          top_n=5, _semantic_scores=None):
+    """Rank supplied Found rows with the existing scorer and weights.
 
-    semantic_scores = cosine_similarity(
-        lost_embedding,
-        embeddings
-    ).flatten()
+    Used by the Supabase backend so its rows go through the same model
+    and component scoring as CSV rows, without loading or mixing CSV data.
+    """
+    found_reports = [
+        dict(row) for row in (found_reports or [])
+        if str(row.get("report_type", "")).strip().lower() == "found"
+    ]
+    if not found_reports:
+        return pd.DataFrame()
 
+    if _semantic_scores is None:
+        descriptions = [str(row.get("description", "") or "")
+                        for row in found_reports]
+        encoded = _get_model().encode(
+            [str(lost_report.get("description", "") or ""), *descriptions],
+            normalize_embeddings=True
+        )
+        semantic_scores = cosine_similarity(
+            encoded[:1], encoded[1:]).flatten()
+    else:
+        semantic_scores = _semantic_scores
 
     results = []
-
-
-    # --------------------------------------------------------
-    # Compare against FOUND reports
-    # --------------------------------------------------------
-
-    for index, report in df.iterrows():
-
-        report_type = str(
-            report.get(
-                "report_type",
-                ""
-            )
-        ).strip().lower()
-
-
-        # ----------------------------------------------------
-        # Only compare against FOUND reports
-        # ----------------------------------------------------
-
-        if report_type != "found":
-
-            continue
-
-
-        # ----------------------------------------------------
-        # Semantic similarity
-        # ----------------------------------------------------
-
-        semantic_score = float(
-            semantic_scores[index]
-        )
-
-
-        # ----------------------------------------------------
-        # Location similarity
-        # ----------------------------------------------------
-
-        location_score = (
-            calculate_location_similarity(
-                lost_report,
-                report
-            )
-        )
-
-
-        # ----------------------------------------------------
-        # Time similarity
-        # ----------------------------------------------------
-
-        time_score = (
-            calculate_time_similarity(
-                lost_report,
-                report
-            )
-        )
-
-
-        # ----------------------------------------------------
-        # Category similarity
-        # ----------------------------------------------------
-
-        category_score = (
-            calculate_category_similarity(
-                lost_report,
-                report
-            )
-        )
-
-
-        # ----------------------------------------------------
-        # FINAL MATCH SCORE
-        #
-        # Semantic     = 50%
-        # Location     = 25%
-        # Time         = 15%
-        # Category     = 10%
-        # ----------------------------------------------------
-
-        final_score = (
-
-            semantic_score * 0.50
-
-            + location_score * 0.25
-
-            + time_score * 0.15
-
-            + category_score * 0.10
-        )
-
-
-        # ----------------------------------------------------
-        # Save result
-        # ----------------------------------------------------
-
+    for report, semantic_score in zip(found_reports, semantic_scores):
+        scoring_report = dict(report)
+        scoring_report["date"] = (report.get("date")
+                                  or report.get("event_date") or "")
+        lost_scoring_report = dict(lost_report)
+        lost_scoring_report["date"] = (lost_report.get("date")
+                                       or lost_report.get("event_date") or "")
+        semantic_score = float(semantic_score)
+        location_score = calculate_location_similarity(
+            lost_scoring_report, scoring_report)
+        time_score = calculate_time_similarity(
+            lost_scoring_report, scoring_report)
+        category_score = calculate_category_similarity(
+            lost_scoring_report, scoring_report)
         results.append({
-
-            "report_id":
-                report.get(
-                    "report_id",
-                    ""
-                ),
-
-            "item_category":
-                report.get(
-                    "item_category",
-                    ""
-                ),
-
-            "description":
-                report.get(
-                    "description",
-                    ""
-                ),
-
-            "organization_type":
-                report.get(
-                    "organization_type",
-                    ""
-                ),
-
-            "organization_name":
-                report.get(
-                    "organization_name",
-                    ""
-                ),
-
-            "campus_or_branch":
-                report.get(
-                    "campus_or_branch",
-                    ""
-                ),
-
-            "building_or_terminal":
-                report.get(
-                    "building_or_terminal",
-                    ""
-                ),
-
-            "floor_or_level":
-                report.get(
-                    "floor_or_level",
-                    ""
-                ),
-
-            "specific_area":
-                report.get(
-                    "specific_area",
-                    ""
-                ),
-
-            "date":
-                report.get(
-                    "date",
-                    ""
-                ),
-
-            "approx_time":
-                report.get(
-                    "approx_time",
-                    ""
-                ),
-
-            "semantic_score":
-                semantic_score,
-
-            "location_score":
-                location_score,
-
-            "time_score":
-                time_score,
-
-            "category_score":
-                category_score,
-
-            "final_score":
-                final_score
+            "id": report.get("id", ""),
+            "report_id": (report.get("legacy_report_id")
+                          or report.get("report_id") or report.get("id", "")),
+            "item_category": report.get("item_category", ""),
+            "description": report.get("description", ""),
+            "organization_type": report.get("organization_type", ""),
+            "organization_name": report.get("organization_name", ""),
+            "campus_or_branch": report.get("campus_or_branch", ""),
+            "building_or_terminal": report.get("building_or_terminal", ""),
+            "floor_or_level": report.get("floor_or_level", ""),
+            "specific_area": report.get("specific_area", ""),
+            "date": scoring_report["date"],
+            "approx_time": report.get("approx_time", ""),
+            "semantic_score": semantic_score,
+            "location_score": location_score,
+            "time_score": time_score,
+            "category_score": category_score,
+            "final_score": (semantic_score * 0.50 + location_score * 0.25
+                            + time_score * 0.15 + category_score * 0.10),
         })
-
-
-    # --------------------------------------------------------
-    # Convert results to DataFrame
-    # --------------------------------------------------------
-
-    results_df = pd.DataFrame(
-        results
-    )
-
-
-    if results_df.empty:
-
-        return results_df
-
-
-    # --------------------------------------------------------
-    # Sort by final score
-    # --------------------------------------------------------
-
-    results_df = results_df.sort_values(
-        by="final_score",
-        ascending=False
-    )
-
-
-    # --------------------------------------------------------
-    # Return top matches
-    # --------------------------------------------------------
-
-    return results_df.head(
-        top_n
-    )
+    return (pd.DataFrame(results).sort_values(
+        by="final_score", ascending=False).head(top_n))
 
 
 # ============================================================

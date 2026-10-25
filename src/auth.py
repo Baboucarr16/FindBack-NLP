@@ -5,18 +5,37 @@ RuntimeError explaining that authentication is not configured; the
 app renders that message instead of failing. No passwords are ever
 stored locally - Supabase Auth owns credentials.
 
-Access tokens live only in the signed Flask session (production needs
-a strong FLASK_SECRET_KEY and HTTPS). They are required for
-user-scoped Supabase requests so Row Level Security applies.
+Access/refresh tokens live in server-side process memory. Flask's
+signed browser cookie contains only an opaque session handle and basic
+display metadata. The current deployment contract uses one Gunicorn
+worker; multi-worker deployments need a shared server-side session
+store. Production needs a strong FLASK_SECRET_KEY and HTTPS.
 """
 
 from functools import wraps
+import secrets
+import threading
 
 from flask import redirect, session, url_for
 
 import db_config
 
 SESSION_KEY = "findback_user"
+_AUTH_SESSIONS = {}
+_AUTH_SESSIONS_LOCK = threading.Lock()
+
+
+def _session_value(auth_session, name):
+    if isinstance(auth_session, dict):
+        return auth_session.get(name)
+    return getattr(auth_session, name, None)
+
+
+def _clear_local_auth_session(session_id=None):
+    if session_id:
+        with _AUTH_SESSIONS_LOCK:
+            _AUTH_SESSIONS.pop(session_id, None)
+    session.clear()
 
 
 def is_enabled():
@@ -85,49 +104,118 @@ def sign_in(email, password):
         {"email": email, "password": password}))
 
 
-def get_user_client():
+def get_user_client(authenticated_user=None):
     """Supabase client acting as the logged-in user (RLS applies).
 
     Raises RuntimeError when logged out or unconfigured.
     """
     _require_enabled()
-    user = current_user()
+    user = authenticated_user or current_user()
     if not user or not user.get("access_token"):
         raise RuntimeError("You must be logged in to do that.")
     client = db_config.get_client()
-    client.auth.set_session(
-        user["access_token"], user.get("refresh_token") or "")
+    try:
+        auth_response = client.auth.set_session(
+            user["access_token"], user.get("refresh_token") or "")
+    except Exception as exc:
+        message = str(exc).lower()
+        invalid_token = any(marker in message for marker in (
+            "invalid refresh token", "refresh token not found",
+            "invalid jwt", "jwt expired", "session not found"))
+        if invalid_token and authenticated_user is None:
+            _clear_local_auth_session(user.get("session_id"))
+        raise RuntimeError(
+            "Your session could not be verified. Please log in again."
+        ) from None
+    refreshed = _session_value(auth_response, "session")
+    if refreshed is None:
+        refreshed = client.auth.get_session()
+    access_token = _session_value(refreshed, "access_token")
+    refresh_token = _session_value(refreshed, "refresh_token")
+    if access_token and refresh_token and authenticated_user is None:
+        session_id = user.get("session_id")
+        if session_id:
+            with _AUTH_SESSIONS_LOCK:
+                auth_state = _AUTH_SESSIONS.get(session_id)
+                if auth_state:
+                    auth_state["access_token"] = access_token
+                    auth_state["refresh_token"] = refresh_token
     return client
 
 
 def ensure_profile(user_client, user_id, email):
-    """Create the profiles row for a user if missing (idempotent)."""
-    user_client.table("profiles").upsert(
-        {"id": user_id, "email": email or ""}).execute()
+    """Create the user's profile when absent without broad update rights."""
+    table = user_client.table("profiles")
+    existing = (table.select("id").eq("id", user_id)
+                .limit(1).execute().data or [])
+    if existing:
+        return existing[0]
+    try:
+        return table.insert({"id": user_id,
+                             "email": email or ""}).execute()
+    except Exception as exc:
+        if "23505" not in str(exc) and "duplicate" not in str(exc).lower():
+            raise
+        existing = (table.select("id").eq("id", user_id)
+                    .limit(1).execute().data or [])
+        if existing:
+            return existing[0]
+        raise
 
 
 def login_session(user):
     """Persist the authenticated user in the Flask session."""
-    session[SESSION_KEY] = {
+    old_user = current_user()
+    if old_user and old_user.get("session_id"):
+        with _AUTH_SESSIONS_LOCK:
+            _AUTH_SESSIONS.pop(old_user["session_id"], None)
+    session.clear()
+    session_id = secrets.token_urlsafe(32)
+    auth_state = {
         "id": user["id"],
         "email": user.get("email", ""),
         "access_token": user.get("access_token"),
         "refresh_token": user.get("refresh_token"),
     }
+    with _AUTH_SESSIONS_LOCK:
+        _AUTH_SESSIONS[session_id] = auth_state
+    session[SESSION_KEY] = {
+        "id": user["id"],
+        "email": user.get("email", ""),
+        "session_id": session_id,
+    }
     session.permanent = False
 
 
 def logout_session():
-    """Clear the Flask session."""
-    session.pop(SESSION_KEY, None)
+    """Revoke the current Supabase session, then clear the Flask cookie."""
+    user = current_user()
+    if user and user.get("access_token") and user.get("refresh_token"):
+        try:
+            client = db_config.get_client()
+            client.auth.set_session(user["access_token"],
+                                    user["refresh_token"])
+            client.auth.sign_out({"scope": "local"})
+        except Exception:
+            # Local logout must still complete even if Auth is unavailable.
+            pass
+    cookie_user = session.get(SESSION_KEY)
+    session_id = (cookie_user.get("session_id")
+                  if isinstance(cookie_user, dict) else None)
+    _clear_local_auth_session(session_id)
 
 
 def current_user():
     """Return the session user dict, or None when logged out."""
-    user = session.get(SESSION_KEY)
-    if not isinstance(user, dict) or not user.get("id"):
+    cookie_user = session.get(SESSION_KEY)
+    if (not isinstance(cookie_user, dict) or not cookie_user.get("id")
+            or not cookie_user.get("session_id")):
         return None
-    return user
+    with _AUTH_SESSIONS_LOCK:
+        auth_state = _AUTH_SESSIONS.get(cookie_user["session_id"])
+        if not auth_state or auth_state.get("id") != cookie_user["id"]:
+            return None
+        return dict(cookie_user, **auth_state)
 
 
 def login_required(view):
