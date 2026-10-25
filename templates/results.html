@@ -26,7 +26,7 @@
             <section class="results-heading">
                 <p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span> Search results</p>
                 <h1>Take a closer look.</h1>
-                <p>These found-item reports are ranked by their weighted similarity to the details you shared.</p>
+                <p>Review the closest reports first. Compare the description, location, and time before deciding whether an item could be yours.</p>
             </section>
 
             <section class="report-summary" aria-labelledby="report-summary-title">
@@ -70,8 +70,8 @@
                         <p class="eyebrow">Closest reports</p>
                         <h2 id="candidate-title">Review each candidate</h2>
                         <p class="similarity-note">
-                            Scores measure text and context similarity, not a guaranteed match.
-                            Verify the details with the venue before claiming an item.
+                            Similarity scores compare text and context; they do not confirm ownership.
+                            Check the details with the venue before arranging to collect an item.
                         </p>
                     </div>
                     <p class="score-disclaimer">Similarity scores are not probabilities of recovery.</p>
@@ -83,7 +83,7 @@
                         <div class="candidate-topline">
                             <div class="candidate-rank">
                                 <span class="rank-number">{{ "%02d"|format(loop.index) }}</span>
-                                <span class="rank-label">Ranked candidate</span>
+                                <span class="rank-label">Potential match</span>
                             </div>
                             <span class="report-reference">Report {{ match["report_id"] }}</span>
                         </div>
