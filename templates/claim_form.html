@@ -1,129 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>FindBack - Claim Item</title>
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
-
-</head>
-
-
-<body>
-
-<div class="container">
-
-
-    <div class="hero">
-
-        <div class="logo">
-            FindBack
-        </div>
-
-        <h1>
-            Claim this item
-        </h1>
-
-        <p>
-            Describe why this found item is yours. Only you and
-            the report owner can see this claim. Do not include
-            phone numbers or addresses.
-        </p>
-
-    </div>
-
-
-    {% if error %}
-
-    <div class="alert alert-error" role="alert">
-        {{ error }}
-    </div>
-
-    {% endif %}
-
-
-    {% if report %}
-
-    <div class="section">
-
-        <p>
-            <strong>
-                {{ report["item_category"] }}
-            </strong>
-        </p>
-
-        <p>
-            {{ report["description"] }}
-        </p>
-
-    </div>
-
-
-    <form
-        action="/claims/new"
-        method="POST"
-        class="report-form"
-    >
-
-        <input
-            type="hidden"
-            name="report_id"
-            value="{{ report['id'] }}"
-        >
-
-        <div class="section">
-
-            <label>
-                Why is this item yours?
-            </label>
-
-            <textarea
-                name="claim_note"
-                rows="4"
-                placeholder="Example: unique sticker, engraving, contents inside."
-            ></textarea>
-
-        </div>
-
-
-        <button
-            type="submit"
-            class="submit-button"
-        >
-
-            File claim
-
-        </button>
-
-
+{% extends "base.html" %}
+{% set page_title = "Review a claim — FindBack" %}
+{% set body_class = "form-page" %}
+{% block content %}
+<section class="page-intro" aria-labelledby="page-title"><p class="eyebrow"><span class="eyebrow-index">CLAIM / REVIEW</span></p><h1 id="page-title">A few details<br><span>only you would know.</span></h1><p>Describe why you recognize this item. Keep contact details and private addresses out of the claim.</p></section>
+{% if error %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endif %}
+{% if report %}
+<section class="form-surface form-surface-narrow">
+    <div class="claim-item"><p class="eyebrow"><span class="eyebrow-index">FOUND REPORT {{ report.get('report_id', report['id']) }}</span></p><h2>{{ report["item_category"] }}</h2><p>{{ report["description"] }}</p></div>
+    <form action="/claims/new" method="POST" class="report-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="report_id" value="{{ report['id'] }}">
+        <fieldset class="form-group"><legend><span>01</span> What helps identify it as yours?</legend><label for="claim_note">Details only the owner is likely to know</label><textarea id="claim_note" name="claim_note" rows="5" maxlength="2000" aria-describedby="claim-help" placeholder="For example: a unique mark, an engraving, or something inside the item."></textarea><p class="field-help" id="claim-help">Your note is visible only to you and the found-report owner. Do not include a phone number or address.</p></fieldset>
+        <div class="form-actions"><button type="submit" class="button button-primary">File private claim <span aria-hidden="true">↗</span></button><a class="text-link" href="/claims">Cancel</a></div>
     </form>
-
-    {% endif %}
-
-
-    <a
-        href="/claims"
-        class="back-button"
-    >
-
-        ← Back to claims
-
-    </a>
-
-
-</div>
-
-</body>
-
-</html>
+</section>
+{% endif %}
+{% endblock %}

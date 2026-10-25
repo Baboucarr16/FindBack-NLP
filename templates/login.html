@@ -1,134 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>FindBack - Log in</title>
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
-
-</head>
-
-
-<body>
-
-<div class="container">
-
-
-    <div class="hero">
-
-        <div class="logo">
-            FindBack
-        </div>
-
-        <h1>
-            Log in
-        </h1>
-
+{% extends "base.html" %}
+{% set page_title = "Log in — FindBack" %}
+{% set body_class = "auth-page" %}
+{% block content %}
+<section class="auth-layout" aria-labelledby="auth-title">
+    <div class="auth-story"><p class="eyebrow"><span class="eyebrow-index">YOUR RECOVERY DESK</span></p><h1 id="auth-title">Pick up<br>where you<br><span>left off.</span></h1><p>Sign in to keep reports, claims, and updates connected to you.</p><div class="auth-stamp" aria-hidden="true"><span>F</span><small>FIND<br>BACK</small></div></div>
+    <div class="auth-panel">
+        <p class="eyebrow"><span class="eyebrow-index">WELCOME BACK</span></p><h2>Log in</h2><p class="panel-intro">Use the email and password for your FindBack account.</p>
+        {% if error %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endif %}
+        {% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
+        {% if not auth_enabled %}<div class="alert alert-warning" role="status">Authentication is not configured on this server. Local CSV mode remains available.</div>{% endif %}
+        <form action="/login" method="POST" class="report-form auth-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div><label for="email">Email</label><input id="email" type="email" name="email" autocomplete="email" placeholder="you@example.com" required></div>
+            <div><label for="password">Password</label><input id="password" type="password" name="password" autocomplete="current-password" required></div>
+            <button type="submit" class="button button-primary">Log in <span aria-hidden="true">↗</span></button>
+        </form>
+        <p class="auth-switch">New to FindBack? <a href="/register">Create an account <span aria-hidden="true">→</span></a></p>
     </div>
-
-
-    {% if error %}
-
-    <div class="alert alert-error" role="alert">
-        {{ error }}
-    </div>
-
-    {% endif %}
-
-
-    {% if message %}
-
-    <div class="alert alert-success" role="status">
-        {{ message }}
-    </div>
-
-    {% endif %}
-
-
-    {% if not auth_enabled %}
-
-    <div class="alert alert-error" role="alert">
-        Authentication is not configured on this server yet.
-        The app continues to work anonymously in local mode.
-    </div>
-
-    {% endif %}
-
-
-    <form
-        action="/login"
-        method="POST"
-        class="report-form"
-    >
-
-        <div class="section">
-
-            <label>
-                Email
-            </label>
-
-            <input
-                type="email"
-                name="email"
-                placeholder="you@example.com"
-                required
-            >
-
-            <label>
-                Password
-            </label>
-
-            <input
-                type="password"
-                name="password"
-                required
-            >
-
-        </div>
-
-
-        <button
-            type="submit"
-            class="submit-button"
-        >
-
-            Log in
-
-        </button>
-
-
-    </form>
-
-
-    <p>
-        No account yet?
-        <a href="/register">Register</a>
-    </p>
-
-
-    <a
-        href="/"
-        class="back-button"
-    >
-
-        ← Back to FindBack
-
-    </a>
-
-
-</div>
-
-</body>
-
-</html>
+</section>
+{% endblock %}

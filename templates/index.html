@@ -1,232 +1,106 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Search found-item reports with FindBack's context-aware lost and found matching.">
-    <title>FindBack — A clearer way to search for lost belongings</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-
-<body>
-    <div class="site-shell">
-        <header class="site-header">
-            <a class="brand" href="/" aria-label="FindBack home">
-                <span class="brand-symbol" aria-hidden="true">f</span>
-                <span class="brand-wordmark">findback</span>
-            </a>
-            <nav class="main-nav" aria-label="Main navigation">
-                <a href="#how-it-works">How it works</a>
-                <a href="/found">Report a found item</a>
-                <a class="nav-cta" href="#report-loss">Search reports</a>
-            </nav>
-        </header>
-
-        <main>
-            <section class="hero" aria-labelledby="hero-title">
-                <div class="hero-copy">
-                    <p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span> A more thoughtful lost &amp; found</p>
-                    <h1 id="hero-title">Lost something.<br><em>Find your next step.</em></h1>
-                    <p class="hero-description">
-                        Search found-item reports with the details that matter: what it is, where you last saw it,
-                        and when it went missing.
-                    </p>
-                    <div class="hero-actions">
-                        <a class="button button-primary" href="#report-loss">
-                            Search found reports
-                            <span class="button-arrow" aria-hidden="true">↗</span>
-                        </a>
-                        <a class="text-link" href="/found">I found an item <span aria-hidden="true">→</span></a>
-                    </div>
-                    <p class="hero-note">Compare the details. Review the closest matches.</p>
-                </div>
-
-                <figure class="hero-art">
-                    <svg viewBox="0 0 760 620" role="img" aria-labelledby="hero-art-title">
-                        <title id="hero-art-title">Illustration of a backpack and a location marker connected by a dotted path</title>
-                        <rect width="760" height="620" rx="10" fill="#e8e6da"/>
-                        <path d="M0 462c90-30 149-45 228-32 87 14 135 76 228 77 112 1 180-65 304-55v168H0V462Z" fill="#d2d9c8"/>
-                        <path d="M0 508c122-37 204-19 298 21 83 36 177 46 269 4 70-32 119-63 193-64v151H0V508Z" fill="#c0cbb9"/>
-                        <g opacity=".6" stroke="#f8f5ec" stroke-width="2">
-                            <path d="M52 112c122 43 203 38 321 2s209-41 341 5"/>
-                            <path d="M31 143c124 44 220 43 344 6s219-39 356 8"/>
-                            <path d="M9 176c128 44 235 46 367 9s229-38 373 9"/>
-                            <path d="M79 213c101 30 187 30 297-2s194-32 314 7"/>
-                            <path d="M86 252c98 27 177 27 281-3s187-28 302 9"/>
-                        </g>
-                        <path d="M103 421c70-98 132-145 221-163 77-16 123-5 197-49 49-29 92-77 130-139" stroke="#1b5b4e" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 11"/>
-                        <circle cx="103" cy="421" r="9" fill="#1b5b4e"/>
-                        <circle cx="103" cy="421" r="17" stroke="#1b5b4e" stroke-opacity=".23" stroke-width="2"/>
-                        <g transform="translate(493 52)">
-                            <path d="M57 0C25.52 0 0 25.52 0 57c0 42.75 57 104 57 104s57-61.25 57-104C114 25.52 88.48 0 57 0Z" fill="#a85f3d"/>
-                            <circle cx="57" cy="56" r="20" fill="#f8f5ec"/>
-                            <circle cx="57" cy="56" r="8" fill="#1b5b4e"/>
-                        </g>
-                        <ellipse cx="373" cy="510" rx="154" ry="27" fill="#183d35" fill-opacity=".12"/>
-                        <path d="M254 296h238l-19 187c-3 31-29 55-60 55H333c-31 0-57-24-60-55l-19-187Z" fill="#1c584b"/>
-                        <path d="M283 296c0-52 40-94 90-94s90 42 90 94" stroke="#17483e" stroke-width="17" stroke-linecap="round"/>
-                        <path d="M271 329h204" stroke="#78a28e" stroke-opacity=".6" stroke-width="2"/>
-                        <path d="M349 367h48c9 0 16 7 16 16v8c0 9-7 16-16 16h-48c-9 0-16-7-16-16v-8c0-9 7-16 16-16Z" fill="#e7c69d"/>
-                        <path d="M366 386h14" stroke="#76533b" stroke-width="3" stroke-linecap="round"/>
-                        <path d="M315 437c36 14 82 14 119 0" stroke="#78a28e" stroke-opacity=".6" stroke-width="2" stroke-linecap="round"/>
-                        <g transform="translate(84 77)">
-                            <rect width="122" height="62" rx="8" fill="#f8f5ec" fill-opacity=".94"/>
-                            <circle cx="23" cy="31" r="7" fill="#a85f3d"/>
-                            <path d="M41 25h58M41 37h40" stroke="#27433d" stroke-width="3" stroke-linecap="round"/>
-                        </g>
-                        <g transform="translate(550 387)">
-                            <rect width="142" height="64" rx="8" fill="#f8f5ec" fill-opacity=".96"/>
-                            <path d="M22 23h17v18H22z" stroke="#1b5b4e" stroke-width="2" stroke-linejoin="round"/>
-                            <path d="m26 23 4 5 5-5" stroke="#1b5b4e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M52 25h68M52 39h48" stroke="#27433d" stroke-width="3" stroke-linecap="round"/>
-                        </g>
-                    </svg>
-                    <figcaption>One useful detail can help point the way.</figcaption>
-                </figure>
-            </section>
-
-            <section id="how-it-works" class="process-section" aria-labelledby="process-title">
-                <div class="section-intro">
-                    <p class="eyebrow">Simple by design</p>
-                    <h2 id="process-title">A clearer path from lost to found.</h2>
-                </div>
-                <div class="process-grid">
-                    <article class="process-step">
-                        <span class="step-number">01</span>
-                        <h3>Describe</h3>
-                        <p>Share the item, its last known place, and an approximate time.</p>
-                    </article>
-                    <article class="process-step">
-                        <span class="step-number">02</span>
-                        <h3>Compare</h3>
-                        <p>FindBack ranks found reports using description, location, time, and category.</p>
-                    </article>
-                    <article class="process-step">
-                        <span class="step-number">03</span>
-                        <h3>Review</h3>
-                        <p>Compare each candidate's details and similarity breakdown for yourself.</p>
-                    </article>
-                </div>
-            </section>
-
-            <section id="report-loss" class="search-section" aria-labelledby="search-title">
-                <div class="search-intro">
-                    <p class="eyebrow">Start with what you remember</p>
-                    <h2 id="search-title">Search for your item</h2>
-                    <p>Include the details you know. You can still search with an approximate location or time.</p>
-                    <div class="search-side-note">
-                        <span class="note-mark" aria-hidden="true">i</span>
-                        <p>FindBack scores indicate weighted similarity, not the probability that a report is your item.</p>
-                    </div>
-                </div>
-
-                <div class="form-card">
-                    {% if error %}
-                    <div class="alert alert-error" role="alert" tabindex="-1">
-                        <span class="alert-icon" aria-hidden="true">!</span>
-                        <span>{{ error }}</span>
-                    </div>
-                    {% endif %}
-
-                    <form action="/search" method="POST" class="report-form">
-                        <fieldset class="form-group">
-                            <legend><span class="form-step">01</span> The item</legend>
-
-                            <label for="item_category">Item category <span class="required-mark">Required</span></label>
-                            <select id="item_category" name="item_category" required>
-                                <option value="">Choose a category</option>
-                                <option value="Backpack">Backpack</option>
-                                <option value="Wallet">Wallet</option>
-                                <option value="Phone">Phone</option>
-                                <option value="Laptop">Laptop</option>
-                                <option value="Earbuds">Earbuds</option>
-                                <option value="Watch">Watch</option>
-                                <option value="Other">Other</option>
-                            </select>
-
-                            <label for="description">Description <span class="required-mark">Required</span></label>
-                            <textarea
-                                id="description"
-                                name="description"
-                                rows="4"
-                                placeholder="Color, brand, distinguishing details, or what was inside."
-                                aria-describedby="description-help"
-                                required
-                            ></textarea>
-                            <p class="field-help" id="description-help">A few specific details can make a report easier to compare.</p>
-                        </fieldset>
-
-                        <fieldset class="form-group">
-                            <legend><span class="form-step">02</span> Last known location</legend>
-
-                            <label for="organization_type">Place type</label>
-                            <select id="organization_type" name="organization_type">
-                                <option value="">Choose a place type</option>
-                                <option value="University">University</option>
-                                <option value="Airport">Airport</option>
-                                <option value="Mall">Mall</option>
-                                <option value="Railway Station">Railway Station</option>
-                                <option value="Hospital">Hospital</option>
-                                <option value="Other">Other</option>
-                            </select>
-
-                            <label for="organization_name">Place / organization <span class="required-mark">Required</span></label>
-                            <input id="organization_name" type="text" name="organization_name" placeholder="e.g. Greenfield University" required>
-
-                            <div class="field-grid">
-                                <div>
-                                    <label for="campus_or_branch">Campus / branch / terminal</label>
-                                    <input id="campus_or_branch" type="text" name="campus_or_branch" placeholder="e.g. Main campus">
-                                </div>
-                                <div>
-                                    <label for="building_or_terminal">Building / terminal</label>
-                                    <input id="building_or_terminal" type="text" name="building_or_terminal" placeholder="e.g. Central library">
-                                </div>
-                                <div>
-                                    <label for="floor_or_level">Floor / level</label>
-                                    <input id="floor_or_level" type="text" name="floor_or_level" placeholder="e.g. 2nd floor">
-                                </div>
-                                <div>
-                                    <label for="specific_area">Specific area</label>
-                                    <input id="specific_area" type="text" name="specific_area" placeholder="e.g. Reading room">
-                                </div>
-                            </div>
-                        </fieldset>
-
-                        <fieldset class="form-group">
-                            <legend><span class="form-step">03</span> When you last saw it</legend>
-                            <div class="field-grid">
-                                <div>
-                                    <label for="date">Date <span class="required-mark">Required</span></label>
-                                    <input id="date" type="date" name="date" required>
-                                </div>
-                                <div>
-                                    <label for="approx_time">Approximate time <span class="required-mark">Required</span></label>
-                                    <input id="approx_time" type="time" name="approx_time" required>
-                                </div>
-                            </div>
-                        </fieldset>
-
-                        <button type="submit" class="button button-primary button-submit">
-                            Find possible matches
-                            <span class="button-arrow" aria-hidden="true">↗</span>
-                        </button>
-                        <p class="form-footnote">Your search is based on the details you provide.</p>
-                    </form>
-                </div>
-            </section>
-        </main>
-
-        <footer class="site-footer">
-            <a class="brand footer-brand" href="/" aria-label="FindBack home">
-                <span class="brand-symbol" aria-hidden="true">f</span>
-                <span class="brand-wordmark">findback</span>
-            </a>
-            <p>A little more clarity when something goes missing.</p>
-            <a href="/found">Report a found item <span aria-hidden="true">→</span></a>
-        </footer>
+{% extends "base.html" %}
+{% set page_title = "FindBack — A clearer way back" %}
+{% set page_description = "Search lost and found reports with the details that help bring belongings back." %}
+{% block content %}
+<section class="home-hero" aria-labelledby="hero-title">
+    <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-index">01</span> Lost &amp; found, with a little more signal</p>
+        <h1 id="hero-title">A way back<br>starts <span>here.</span></h1>
+        <p class="hero-description">A useful detail can make the difference. Describe what went missing, then compare your search with found-item reports.</p>
+        <div class="hero-actions">
+            <a class="button button-primary" href="#report-loss">Search found reports <span aria-hidden="true">↗</span></a>
+            <a class="button button-quiet" href="/found">I found an item <span aria-hidden="true">→</span></a>
+        </div>
+        <p class="hero-note"><span class="note-spark" aria-hidden="true">✳</span> A considered search. A human next step.</p>
     </div>
-</body>
+    <figure class="hero-visual">
+        <div class="visual-caption"><span>FIELD NOTE</span><span>01 / FIND BACK</span></div>
+        <svg class="recovery-map" viewBox="0 0 640 470" role="img" aria-labelledby="map-title map-desc">
+            <title id="map-title">A recovery route connecting a reported item and a found report</title>
+            <desc id="map-desc">Abstract map lines with two marked points connected by a dotted route.</desc>
+            <rect width="640" height="470" fill="#dce5d9"/>
+            <path d="M-8 95C98 39 183 57 248 103s142 46 219 1 117-56 184-30M-10 141c112-54 195-32 264 16s142 49 224 2 131-51 174-34M-14 190c115-54 194-25 267 25s152 52 239 4 119-43 166-25M-20 248c122-51 201-18 275 33s160 55 250 8 118-36 156-17M-20 316c129-45 215-7 284 42s164 57 253 16 112-22 144-4M-15 386c127-39 215-3 291 44s163 49 247 14 115-18 140-2" fill="none" stroke="#f7f8f0" stroke-width="3" opacity=".9"/>
+            <path d="M68 363C146 333 173 267 245 251s129 21 184-19 77-100 137-141" fill="none" stroke="#182820" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 12"/>
+            <circle cx="68" cy="363" r="14" fill="#e5f54c" stroke="#182820" stroke-width="3"/>
+            <circle cx="566" cy="91" r="14" fill="#2d52e8" stroke="#f7f8f0" stroke-width="5"/>
+            <g transform="translate(274 258) rotate(-8)">
+                <rect x="0" y="0" width="236" height="150" rx="4" fill="#fcfcf7"/>
+                <path d="M0 15h236" stroke="#d6d9cf"/>
+                <circle cx="19" cy="8" r="3" fill="#2d52e8"/>
+                <text x="20" y="47" fill="#68716b" font-family="Arial,sans-serif" font-size="10" font-weight="700" letter-spacing="2">RECOVERY NOTE / 014</text>
+                <text x="20" y="79" fill="#182820" font-family="Arial,sans-serif" font-size="23" font-weight="700">One clear detail.</text>
+                <text x="20" y="103" fill="#68716b" font-family="Arial,sans-serif" font-size="13">The route starts to take shape.</text>
+                <path d="M20 126h76" stroke="#2d52e8" stroke-width="3"/>
+            </g>
+            <g transform="translate(38 37)">
+                <rect width="113" height="39" rx="2" fill="#182820"/>
+                <text x="14" y="25" fill="#f8f9f3" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1">LAST SEEN</text>
+            </g>
+            <g transform="translate(470 145)">
+                <rect width="127" height="39" rx="2" fill="#e5f54c"/>
+                <text x="14" y="25" fill="#182820" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1">FOUND REPORT</text>
+            </g>
+        </svg>
+        <figcaption><span>Good matches are built from context.</span><span aria-hidden="true">↗</span></figcaption>
+    </figure>
+</section>
 
-</html>
+<section class="how-section" aria-labelledby="how-title">
+    <div class="section-heading">
+        <p class="eyebrow"><span class="eyebrow-index">HOW IT WORKS</span></p>
+        <h2 id="how-title">From what you remember<br>to what might be yours.</h2>
+    </div>
+    <ol class="journey-list">
+        <li><span class="journey-number">01</span><div><h3>Describe the details</h3><p>Item, last known place, and when you saw it.</p></div><span class="journey-arrow" aria-hidden="true">↘</span></li>
+        <li><span class="journey-number">02</span><div><h3>Compare the reports</h3><p>FindBack ranks candidates by description, place, time, and category.</p></div><span class="journey-arrow" aria-hidden="true">↘</span></li>
+        <li><span class="journey-number">03</span><div><h3>Review with care</h3><p>Check the evidence and contact the venue before you claim an item.</p></div><span class="journey-arrow" aria-hidden="true">↘</span></li>
+    </ol>
+</section>
+
+<section class="search-workspace" id="report-loss" aria-labelledby="search-title">
+    <div class="workspace-intro">
+        <p class="eyebrow"><span class="eyebrow-index">SEARCH DESK / 01</span></p>
+        <h2 id="search-title">Tell us what<br>you’re looking for.</h2>
+        <p>Start with the details you know. Approximate place and time are useful too.</p>
+        <div class="score-note"><span aria-hidden="true">i</span><p>Similarity scores help you compare reports. They are not probabilities or confirmation of ownership.</p></div>
+    </div>
+    <div class="form-surface">
+        {% if error %}<div class="alert alert-error" role="alert" tabindex="-1">{{ error }}</div>{% endif %}
+        <form action="/search" method="POST" class="report-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="submission_key" value="{{ submission_key }}">
+            <fieldset class="form-group">
+                <legend><span>01</span> The item</legend>
+                <div class="field-grid field-grid-item">
+                    <div><label for="item_category">Item category <span class="required-mark">Required</span></label>
+                        <select id="item_category" name="item_category" required><option value="">Choose a category</option><option>Backpack</option><option>Wallet</option><option>Phone</option><option>Laptop</option><option>Earbuds</option><option>Watch</option><option>Other</option></select>
+                    </div>
+                    <div><label for="description">Description <span class="required-mark">Required</span></label>
+                        <textarea id="description" name="description" rows="3" placeholder="Color, brand, marks, or what was inside." aria-describedby="description-help" required></textarea>
+                        <p class="field-help" id="description-help">Distinctive details make reports easier to compare.</p>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset class="form-group">
+                <legend><span>02</span> Last known place</legend>
+                <div class="field-grid field-grid-two">
+                    <div><label for="organization_type">Place type</label><select id="organization_type" name="organization_type"><option value="">Choose a place type</option><option>University</option><option>Airport</option><option>Mall</option><option>Railway Station</option><option>Hospital</option><option>Other</option></select></div>
+                    <div><label for="organization_name">Place / organization <span class="required-mark">Required</span></label><input id="organization_name" type="text" name="organization_name" placeholder="e.g. Greenfield University" required></div>
+                    <div><label for="campus_or_branch">Campus / branch</label><input id="campus_or_branch" type="text" name="campus_or_branch" placeholder="Main campus"></div>
+                    <div><label for="building_or_terminal">Building / terminal</label><input id="building_or_terminal" type="text" name="building_or_terminal" placeholder="Central library"></div>
+                    <div><label for="floor_or_level">Floor / level</label><input id="floor_or_level" type="text" name="floor_or_level" placeholder="2nd floor"></div>
+                    <div><label for="specific_area">Specific area</label><input id="specific_area" type="text" name="specific_area" placeholder="Reading room"></div>
+                </div>
+            </fieldset>
+            <fieldset class="form-group">
+                <legend><span>03</span> When you last saw it</legend>
+                <div class="field-grid field-grid-two field-grid-date">
+                    <div><label for="date">Date <span class="required-mark">Required</span></label><input id="date" type="date" name="date" required></div>
+                    <div><label for="approx_time">Approximate time <span class="required-mark">Required</span></label><input id="approx_time" type="time" name="approx_time" required></div>
+                </div>
+            </fieldset>
+            <div class="form-actions"><button type="submit" class="button button-primary">Find possible matches <span aria-hidden="true">↗</span></button><p>Only share details that help identify your item.</p></div>
+        </form>
+    </div>
+</section>
+{% endblock %}
