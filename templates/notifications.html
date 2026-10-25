@@ -1,92 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>FindBack - Notifications</title>
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
-
-</head>
-
-
-<body>
-
-<div class="container">
-
-
-    <div class="hero">
-
-        <div class="logo">
-            FindBack
-        </div>
-
-        <h1>
-            Notifications
-        </h1>
-
-    </div>
-
-
-    {% if error %}
-
-    <div class="alert alert-error" role="alert">
-        {{ error }}
-    </div>
-
-    {% endif %}
-
-
-    {% if notifications %}
-
-    <ul>
-
-        {% for note in notifications %}
-
-        <li>
-            <strong>
-                {{ note["title"] }}
-            </strong>
-            <p>
-                {{ note["body"] }}
-            </p>
-        </li>
-
-        {% endfor %}
-
-    </ul>
-
-    {% else %}
-
-    <p>
-        No notifications yet.
-    </p>
-
-    {% endif %}
-
-
-    <a
-        href="/"
-        class="back-button"
-    >
-
-        ← Back to FindBack
-
-    </a>
-
-
-</div>
-
-</body>
-
-</html>
+{% extends "base.html" %}
+{% set page_title = "Updates — FindBack" %}
+{% set body_class = "account-page" %}
+{% block content %}
+<section class="page-intro account-intro" aria-labelledby="page-title"><p class="eyebrow"><span class="eyebrow-index">YOUR FIND BACK / UPDATES</span></p><h1 id="page-title">A little news<br><span>from the search.</span></h1><p>Updates related to your reports and possible matches.</p></section>
+{% if error %}<div class="alert alert-warning" role="status">{{ error }}</div>{% endif %}
+<section class="notification-feed" aria-label="Notifications">
+    {% if notifications %}<ul class="notification-list">{% for note in notifications %}<li class="notification-row"><span class="notification-mark" aria-hidden="true">↗</span><div><h2>{{ note["title"] }}</h2><p>{{ note["body"] }}</p></div></li>{% endfor %}</ul>{% else %}<div class="account-empty notification-empty"><span aria-hidden="true">✳</span><h2>No updates yet.</h2><p>When there is news about your reports, it will show up here.</p><a href="/" class="text-link">Back to your search <span aria-hidden="true">↗</span></a></div>{% endif %}
+</section>
+{% endblock %}

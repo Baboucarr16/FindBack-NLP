@@ -1,168 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Report an item you found so FindBack can compare it with lost-item searches.">
-    <title>FindBack — Report a found item</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-
-<body>
-    <div class="site-shell">
-        <header class="site-header">
-            <a class="brand" href="/" aria-label="FindBack home">
-                <span class="brand-symbol" aria-hidden="true">f</span>
-                <span class="brand-wordmark">findback</span>
-            </a>
-            <nav class="main-nav" aria-label="Main navigation">
-                <a href="/">Search items</a>
-                <a class="nav-cta" href="/found" aria-current="page">Report a found item</a>
-            </nav>
-        </header>
-
-        <main class="narrow-main">
-            <section class="page-heading">
-                <p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span> Found item report</p>
-                <h1>Help a lost item<br><em>find its way back.</em></h1>
-                <p>Add a clear description and where and when you found it. FindBack can then compare it with lost-item searches.</p>
-            </section>
-
-            {% if error %}
-            <div class="alert alert-error" role="alert" tabindex="-1">
-                <span class="alert-icon" aria-hidden="true">!</span>
-                <span>{{ error }}</span>
+{% extends "base.html" %}
+{% set page_title = "Report a found item — FindBack" %}
+{% set page_description = "Share where and when you found an item so it can be compared with lost-item reports." %}
+{% set body_class = "form-page" %}
+{% block content %}
+<section class="page-intro" aria-labelledby="page-title">
+    <p class="eyebrow"><span class="eyebrow-index">CONTRIBUTE / 02</span></p>
+    <h1 id="page-title">You found it.<br><span>Let’s find its person.</span></h1>
+    <p>A clear place, time, and description can help connect your report with a search.</p>
+</section>
+{% if error %}<div class="alert alert-error" role="alert" tabindex="-1">{{ error }}</div>{% endif %}
+{% if success %}
+<section class="success-panel" role="status" aria-labelledby="success-title">
+    <p class="eyebrow"><span class="eyebrow-index">REPORT RECEIVED</span></p>
+    <div class="success-mark" aria-hidden="true">✓</div>
+    <h2 id="success-title">Thank you for looking out.</h2>
+    <p>Your found-item report has been recorded.</p>
+    <p class="reference-id">Reference <strong>{{ report_id }}</strong></p>
+    <a class="button button-primary" href="/">Return to FindBack <span aria-hidden="true">↗</span></a>
+</section>
+{% else %}
+<section class="form-surface form-surface-narrow" aria-labelledby="found-form-title">
+    <div class="surface-heading"><div><p class="eyebrow"><span class="eyebrow-index">THREE USEFUL DETAILS</span></p><h2 id="found-form-title">Add a found report</h2></div><p><span class="required-mark">Required fields</span></p></div>
+    <ol class="step-rail" aria-label="Report sections"><li><span>01</span> Item</li><li><span>02</span> Place</li><li><span>03</span> Time</li></ol>
+    <form action="/found" method="POST" class="report-form">
+        <fieldset class="form-group"><legend><span>01</span> What did you find?</legend>
+            <div class="field-grid field-grid-two">
+                <div><label for="item_category">Item category <span class="required-mark">Required</span></label><select id="item_category" name="item_category" required><option value="">Choose a category</option><option>Backpack</option><option>Wallet</option><option>Phone</option><option>Laptop</option><option>Earbuds</option><option>Watch</option><option>Other</option></select></div>
+                <div><label for="description">Description <span class="required-mark">Required</span></label><textarea id="description" name="description" rows="3" placeholder="Color, brand, condition, or another identifying detail." required></textarea><p class="field-help">Avoid publishing private details that could identify the owner.</p></div>
             </div>
-            {% endif %}
-
-            {% if success %}
-            <section class="success-panel" role="status" aria-labelledby="success-title">
-                <span class="success-symbol" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" focusable="false">
-                        <path d="m5 12 4.5 4.5L19 7"/>
-                    </svg>
-                </span>
-                <p class="eyebrow">Report received</p>
-                <h2 id="success-title">Thank you for looking out.</h2>
-                <p>Your found-item report has been recorded.</p>
-                <p class="reference-id">Reference <strong>{{ report_id }}</strong></p>
-                <a class="button button-primary" href="/">Return to FindBack <span class="button-arrow" aria-hidden="true">↗</span></a>
-            </section>
-            {% else %}
-            <section class="form-card found-form-card" aria-labelledby="found-form-title">
-                <div class="form-card-heading">
-                    <div>
-                        <p class="eyebrow">Three short steps</p>
-                        <h2 id="found-form-title">Share the details</h2>
-                    </div>
-                    <p><span class="required-dot" aria-hidden="true">*</span> Required fields</p>
-                </div>
-
-                <ol class="step-rail" aria-label="Report steps">
-                    <li><span>01</span> Item</li>
-                    <li><span>02</span> Location</li>
-                    <li><span>03</span> Time</li>
-                </ol>
-
-                <form action="/found" method="POST" class="report-form">
-                    <fieldset class="form-group">
-                        <legend><span class="form-step">01</span> What did you find?</legend>
-
-                        <label for="item_category">Item category <span class="required-mark">Required</span></label>
-                        <select id="item_category" name="item_category" required>
-                            <option value="">Choose a category</option>
-                            <option value="Backpack">Backpack</option>
-                            <option value="Wallet">Wallet</option>
-                            <option value="Phone">Phone</option>
-                            <option value="Laptop">Laptop</option>
-                            <option value="Earbuds">Earbuds</option>
-                            <option value="Watch">Watch</option>
-                            <option value="Other">Other</option>
-                        </select>
-
-                        <label for="description">Description <span class="required-mark">Required</span></label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            rows="4"
-                            placeholder="Color, brand, condition, or another detail that identifies it."
-                            required
-                        ></textarea>
-                    </fieldset>
-
-                    <fieldset class="form-group">
-                        <legend><span class="form-step">02</span> Where did you find it?</legend>
-
-                        <label for="organization_type">Place type <span class="required-mark">Required</span></label>
-                        <select id="organization_type" name="organization_type" required>
-                            <option value="">Choose a place type</option>
-                            <option value="University">University</option>
-                            <option value="Airport">Airport</option>
-                            <option value="Mall">Mall</option>
-                            <option value="Railway Station">Railway Station</option>
-                            <option value="Hospital">Hospital</option>
-                            <option value="Other">Other</option>
-                        </select>
-
-                        <label for="organization_name">Place / organization <span class="required-mark">Required</span></label>
-                        <input id="organization_name" type="text" name="organization_name" placeholder="e.g. Greenfield University" required>
-
-                        <div class="field-grid">
-                            <div>
-                                <label for="campus_or_branch">Campus / branch / terminal</label>
-                                <input id="campus_or_branch" type="text" name="campus_or_branch" placeholder="e.g. Main campus">
-                            </div>
-                            <div>
-                                <label for="building_or_terminal">Building / terminal</label>
-                                <input id="building_or_terminal" type="text" name="building_or_terminal" placeholder="e.g. Engineering block">
-                            </div>
-                            <div>
-                                <label for="floor_or_level">Floor / level</label>
-                                <input id="floor_or_level" type="text" name="floor_or_level" placeholder="e.g. 3rd floor">
-                            </div>
-                            <div>
-                                <label for="specific_area">Specific area</label>
-                                <input id="specific_area" type="text" name="specific_area" placeholder="e.g. Laboratory 3">
-                            </div>
-                        </div>
-                    </fieldset>
-
-                    <fieldset class="form-group">
-                        <legend><span class="form-step">03</span> When did you find it?</legend>
-                        <div class="field-grid">
-                            <div>
-                                <label for="date">Date <span class="required-mark">Required</span></label>
-                                <input id="date" type="date" name="date" required>
-                            </div>
-                            <div>
-                                <label for="approx_time">Approximate time <span class="required-mark">Required</span></label>
-                                <input id="approx_time" type="time" name="approx_time" required>
-                            </div>
-                        </div>
-                    </fieldset>
-
-                    <button type="submit" class="button button-primary button-submit">
-                        Submit found-item report
-                        <span class="button-arrow" aria-hidden="true">↗</span>
-                    </button>
-                    <p class="form-footnote">Your report will be compared with lost-item searches.</p>
-                </form>
-            </section>
-            {% endif %}
-
-            <p class="return-link"><a href="/">← Back to FindBack</a></p>
-        </main>
-
-        <footer class="site-footer">
-            <a class="brand footer-brand" href="/" aria-label="FindBack home">
-                <span class="brand-symbol" aria-hidden="true">f</span>
-                <span class="brand-wordmark">findback</span>
-            </a>
-            <p>A little more clarity when something goes missing.</p>
-            <a href="/">Search found reports <span aria-hidden="true">→</span></a>
-        </footer>
-    </div>
-</body>
-
-</html>
+        </fieldset>
+        <fieldset class="form-group"><legend><span>02</span> Where did you find it?</legend>
+            <div class="field-grid field-grid-two">
+                <div><label for="organization_type">Place type <span class="required-mark">Required</span></label><select id="organization_type" name="organization_type" required><option value="">Choose a place type</option><option>University</option><option>Airport</option><option>Mall</option><option>Railway Station</option><option>Hospital</option><option>Other</option></select></div>
+                <div><label for="organization_name">Place / organization <span class="required-mark">Required</span></label><input id="organization_name" name="organization_name" type="text" placeholder="e.g. Greenfield University" required></div>
+                <div><label for="campus_or_branch">Campus / branch / terminal</label><input id="campus_or_branch" name="campus_or_branch" type="text" placeholder="Main campus"></div>
+                <div><label for="building_or_terminal">Building / terminal</label><input id="building_or_terminal" name="building_or_terminal" type="text" placeholder="Engineering block"></div>
+                <div><label for="floor_or_level">Floor / level</label><input id="floor_or_level" name="floor_or_level" type="text" placeholder="3rd floor"></div>
+                <div><label for="specific_area">Specific area</label><input id="specific_area" name="specific_area" type="text" placeholder="Laboratory 3"></div>
+            </div>
+        </fieldset>
+        <fieldset class="form-group"><legend><span>03</span> When did you find it?</legend>
+            <div class="field-grid field-grid-two field-grid-date"><div><label for="date">Date <span class="required-mark">Required</span></label><input id="date" type="date" name="date" required></div><div><label for="approx_time">Approximate time <span class="required-mark">Required</span></label><input id="approx_time" type="time" name="approx_time" required></div></div>
+        </fieldset>
+        <div class="form-actions"><button type="submit" class="button button-primary">Submit found-item report <span aria-hidden="true">↗</span></button><p>Your report may help someone identify a candidate. It does not confirm ownership.</p></div>
+    </form>
+</section>
+{% endif %}
+{% endblock %}
