@@ -4,6 +4,7 @@ import sys
 import types
 
 import pytest
+from flask import session as flask_session
 
 import tests.conftest  # noqa: F401  (path setup)
 
@@ -13,9 +14,12 @@ if "semantic_matcher" not in sys.modules:
     fake = types.ModuleType("semantic_matcher")
     fake.find_semantic_matches_for_report = (
         lambda lost_report, top_n=5: pd.DataFrame())
+    fake.find_semantic_matches_against_reports = (
+        lambda lost_report, reports, top_n=5: pd.DataFrame())
     sys.modules["semantic_matcher"] = fake
 
 import app as app_module  # noqa: E402
+from auth import login_session  # noqa: E402
 import store as store_module  # noqa: E402
 
 
@@ -94,9 +98,12 @@ def client():
 
 @pytest.fixture()
 def logged_in(client):
-    with client.session_transaction() as session:
-        session["findback_user"] = {"id": "user-1", "email": "u@x.co",
-                                    "access_token": "t"}
+    with app_module.app.test_request_context():
+        login_session({"id": "user-1", "email": "u@x.co",
+                       "access_token": "t", "refresh_token": "r"})
+        cookie_user = dict(flask_session["findback_user"])
+    with client.session_transaction() as client_session:
+        client_session["findback_user"] = cookie_user
 
 
 @pytest.fixture(autouse=True)
@@ -210,8 +217,8 @@ def test_supabase_found_save_binds_owner(client, logged_in, supabase_mode,
     saved = []
 
     class FakeFoundStore(FakeClaimsStore):
-        def save_report(self, payload, owner_id=None):
-            saved.append((payload, owner_id))
+        def save_report(self, payload, owner_id=None, idempotency_key=None):
+            saved.append((payload, owner_id, idempotency_key))
             return [{"id": "uuid-1234"}]
 
     _use_store(monkeypatch, FakeFoundStore())
@@ -225,6 +232,7 @@ def test_supabase_found_save_binds_owner(client, logged_in, supabase_mode,
     assert response.status_code == 200
     assert saved[0][1] == "user-1"
     assert saved[0][0]["report_type"] == "Found"
+    assert saved[0][2]
     assert b"uuid-1234"[:8] in response.data
 
 

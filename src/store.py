@@ -82,7 +82,10 @@ class SupabaseStore:
 
     def list_found(self):
         response = (self.client.table("reports")
-                    .select("*")
+                    .select("id,legacy_report_id,report_type,item_category,"
+                            "description,organization_type,organization_name,"
+                            "campus_or_branch,building_or_terminal,floor_or_level,"
+                            "specific_area,event_date,approx_time,status")
                     .eq("report_type", "Found")
                     .eq("status", "active")
                     .execute())
@@ -91,7 +94,10 @@ class SupabaseStore:
     def list_active_lost(self):
         """Active lost reports (for automatic matching)."""
         response = (self.client.table("reports")
-                    .select("*")
+                    .select("id,owner_id,report_type,item_category,description,"
+                            "organization_type,organization_name,campus_or_branch,"
+                            "building_or_terminal,floor_or_level,specific_area,"
+                            "event_date,approx_time,status")
                     .eq("report_type", "Lost")
                     .eq("status", "active")
                     .execute())
@@ -100,18 +106,47 @@ class SupabaseStore:
     def get_report(self, report_id):
         """One report by id, or None. RLS decides visibility."""
         response = (self.client.table("reports")
-                    .select("*")
+                    .select("id,owner_id,report_type,item_category,description,"
+                            "organization_type,organization_name,campus_or_branch,"
+                            "building_or_terminal,floor_or_level,specific_area,"
+                            "event_date,approx_time,status")
                     .eq("id", report_id)
                     .limit(1)
                     .execute())
         rows = response.data or []
         return rows[0] if rows else None
 
-    def save_report(self, payload, owner_id=None):
+    def save_report(self, payload, owner_id=None, idempotency_key=None):
         row = dict(payload)
         row["owner_id"] = owner_id
         row["status"] = row.get("status", "active") or "active"
-        return self.client.table("reports").insert(row).execute().data
+        if idempotency_key:
+            row["submission_key"] = idempotency_key
+            existing = self._find_submission(owner_id, idempotency_key)
+            if existing:
+                return [existing]
+        try:
+            response = self.client.table("reports").insert(row).execute()
+        except Exception as exc:
+            if not idempotency_key or not (
+                    "23505" in str(exc)
+                    or "duplicate" in str(exc).lower()):
+                raise
+            existing = self._find_submission(owner_id, idempotency_key)
+            if existing:
+                return [existing]
+            raise
+        return response.data or [row]
+
+    def _find_submission(self, owner_id, idempotency_key):
+        response = (self.client.table("reports")
+                    .select("id,owner_id,submission_key,report_type,status")
+                    .eq("owner_id", owner_id)
+                    .eq("submission_key", idempotency_key)
+                    .limit(1)
+                    .execute())
+        rows = response.data or []
+        return rows[0] if rows else None
 
     def list_notifications(self, user_id):
         """Own notifications, newest unread first."""
@@ -154,8 +189,7 @@ class SupabaseStore:
             response = (self.client.table("claims")
                         .insert({"report_id": report_id,
                                  "claimant_id": claimant_id,
-                                 "claim_note": note or "",
-                                 "status": "pending"})
+                                 "claim_note": note or ""})
                         .execute())
         except Exception as exc:
             if "23505" in str(exc):
@@ -210,6 +244,7 @@ class SupabaseStore:
         response = (self.client.table("claims")
                     .update({"status": "approved" if approve else "rejected"})
                     .eq("id", claim_id)
+                    .eq("status", "pending")
                     .execute())
         updated = response.data or []
         return updated[0] if updated else dict(
@@ -227,9 +262,13 @@ def validate_claim_transition(old_status, approve):
 
 
 def get_store(csv_path=None):
-    """Default store: Supabase when requested + configured, else CSV."""
-    if (os.environ.get("FINDBACK_STORE", "").strip().lower() == "supabase"
-            and db_config.is_configured()):
+    """Select the requested backend without silent production fallback."""
+    mode = os.environ.get("FINDBACK_STORE", "csv").strip().lower() or "csv"
+    if mode not in {"csv", "supabase"}:
+        raise RuntimeError("FINDBACK_STORE must be either 'csv' or 'supabase'.")
+    if mode == "supabase":
+        if not db_config.is_configured():
+            raise RuntimeError(db_config.NOT_CONFIGURED)
         return SupabaseStore()
     return CsvStore(csv_path or os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),

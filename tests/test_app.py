@@ -12,6 +12,7 @@ import types
 
 import pandas as pd
 import pytest
+from flask import session as flask_session
 
 import tests.conftest as conftest  # noqa: F401  (path setup)
 
@@ -22,7 +23,12 @@ def _stub_matcher(rows):
     def find_semantic_matches_for_report(lost_report, top_n=5):
         return pd.DataFrame(rows).head(top_n)
 
+    def find_semantic_matches_against_reports(lost_report, reports, top_n=5):
+        return pd.DataFrame(rows).head(top_n)
+
     fake.find_semantic_matches_for_report = find_semantic_matches_for_report
+    fake.find_semantic_matches_against_reports = (
+        find_semantic_matches_against_reports)
     sys.modules["semantic_matcher"] = fake
 
 
@@ -68,6 +74,7 @@ _MATCH_ROWS = [
 _stub_matcher(_MATCH_ROWS)
 
 import app as app_module  # noqa: E402
+from auth import login_session  # noqa: E402
 
 
 @pytest.fixture()
@@ -93,8 +100,25 @@ def _search_form(**overrides):
     return form
 
 
+def _login(client, user_id="owner-1"):
+    with app_module.app.test_request_context():
+        login_session({"id": user_id, "email": "owner@example.test",
+                       "access_token": "test-access-token",
+                       "refresh_token": "test-refresh-token"})
+        cookie_user = dict(flask_session["findback_user"])
+    with client.session_transaction() as client_session:
+        client_session["findback_user"] = cookie_user
+
+
 def test_homepage_loads(client):
     assert client.get("/").status_code == 200
+
+
+def test_health_endpoint_is_lightweight_and_does_not_require_database(client):
+    response = client.get("/healthz")
+
+    assert response.status_code == 200
+    assert response.get_json() == {"status": "ok"}
 
 
 def test_found_form_loads(client):
@@ -213,3 +237,101 @@ def test_failed_write_does_not_claim_success(client, monkeypatch, tmp_path):
     response = client.post("/found", data=_found_form())
     assert b"Could not save" in response.data
     assert b"FB001" not in response.data
+
+
+def test_supabase_search_persists_lost_report_and_matches_supabase_found(
+        client, monkeypatch):
+    import store as store_module
+    import notify as notify_module
+
+    monkeypatch.setenv("FINDBACK_STORE", "supabase")
+    monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
+    monkeypatch.setenv("SUPABASE_ANON_KEY", "anon-key")
+    _login(client)
+
+    class SearchStore:
+        def __init__(self, client=None):
+            self.saved = None
+            self.pairs = []
+            self.notifications = []
+
+        def save_report(self, payload, owner_id=None, idempotency_key=None):
+            self.saved = (payload, owner_id, idempotency_key)
+            return [{"id": "lost-uuid", **payload, "owner_id": owner_id}]
+
+        def list_found(self):
+            return [{"id": "found-uuid", "legacy_report_id": "FB900",
+                     "report_type": "Found", "status": "active",
+                     "item_category": "Backpack", "description": "navy bag",
+                     "organization_name": "Greenfield University",
+                     "event_date": "2026-08-18", "approx_time": "16:45"}]
+
+        def upsert_match_result(self, pair):
+            self.pairs.append(pair)
+            return pair
+
+    store = SearchStore()
+    monkeypatch.setattr(store_module, "SupabaseStore", lambda client=None: store)
+    monkeypatch.setattr(app_module, "get_user_client", lambda: object())
+    monkeypatch.setattr(notify_module, "get_notifier", lambda: None)
+    monkeypatch.setattr(
+        "semantic_matcher.find_semantic_matches_against_reports",
+        lambda lost, found, top_n=5: pd.DataFrame([{
+            "id": "found-uuid", "report_id": "FB900",
+            "item_category": "Backpack", "description": "navy bag",
+            "date": "2026-08-18", "approx_time": "16:45",
+            "semantic_score": .9, "location_score": .8,
+            "time_score": 1., "category_score": 1., "final_score": .9,
+        }]),
+    )
+
+    response = client.post("/search", data=_search_form())
+    assert response.status_code == 200
+    assert store.saved[0]["report_type"] == "Lost"
+    assert store.saved[0]["event_date"] == "2026-08-18"
+    assert store.saved[1] == "owner-1"
+    assert store.saved[2]
+    assert b"FB900" in response.data
+    assert store.pairs[0]["lost_report_id"] == "lost-uuid"
+    assert store.pairs[0]["found_report_id"] == "found-uuid"
+
+
+def test_supabase_search_requires_login_and_does_not_write(
+        client, monkeypatch):
+    monkeypatch.setenv("FINDBACK_STORE", "supabase")
+    monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
+    monkeypatch.setenv("SUPABASE_ANON_KEY", "anon-key")
+    response = client.post("/search", data=_search_form())
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/login")
+
+
+def test_state_changing_posts_require_csrf_outside_test_mode(client):
+    app_module.app.config["TESTING"] = False
+    try:
+        response = client.post("/search", data=_search_form())
+    finally:
+        app_module.app.config["TESTING"] = True
+    assert response.status_code == 400
+
+
+def test_supabase_search_backend_errors_are_not_rendered(
+        client, monkeypatch):
+    monkeypatch.setenv("FINDBACK_STORE", "supabase")
+    monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
+    monkeypatch.setenv("SUPABASE_ANON_KEY", "anon-key")
+    _login(client)
+
+    class BrokenStore:
+        def __init__(self, client=None):
+            pass
+
+        def save_report(self, *args, **kwargs):
+            raise RuntimeError("secret-token SQL policy detail")
+
+    import store as store_module
+    monkeypatch.setattr(store_module, "SupabaseStore", BrokenStore)
+    monkeypatch.setattr(app_module, "get_user_client", lambda *args: object())
+    response = client.post("/search", data=_search_form())
+    assert b"Could not save or search reports" in response.data
+    assert b"secret-token" not in response.data

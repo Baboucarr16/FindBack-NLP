@@ -1,5 +1,5 @@
 import pandas as pd
-import os
+from artifact_paths import PROJECT_ROOT, output_path
 
 
 # ============================================================
@@ -250,64 +250,34 @@ new_data = [
 
 
 # ============================================================
-# ADD TO EXISTING DATASET
+# WRITE A DERIVED COPY (NEVER OVERWRITE THE SOURCE DATASET)
 # ============================================================
 
-file_path = "dataset/findback_reports.csv"
+def write_augmented_dataset():
+    source_file = PROJECT_ROOT / "dataset" / "findback_reports.csv"
+    output_file = output_path("findback_reports_with_hard_cases.csv")
 
+    if not source_file.exists():
+        print("ERROR: Dataset file was not found.")
+        return 1
 
-if not os.path.exists(file_path):
-
-    print("ERROR: Dataset file was not found.")
-
-else:
-
-    df = pd.read_csv(file_path)
-
+    df = pd.read_csv(source_file)
     new_df = pd.DataFrame(new_data)
-
-    # Avoid duplicate IDs if script is accidentally run again
     existing_ids = set(df["report_id"])
+    new_df = new_df[~new_df["report_id"].isin(existing_ids)]
 
-    new_df = new_df[
-        ~new_df["report_id"].isin(existing_ids)
-    ]
+    if new_df.empty:
+        print("No new records were added; the hard-case IDs already exist.")
+        return 0
 
-    if len(new_df) == 0:
+    augmented = pd.concat([df, new_df], ignore_index=True)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    augmented.to_csv(output_file, index=False)
+    print("Generated an augmented copy at:", output_file)
+    print("New reports:", len(new_df))
+    print("Total reports:", len(augmented))
+    return 0
 
-        print("No new records were added.")
-        print("These hard cases already exist.")
 
-    else:
-
-        df = pd.concat(
-            [df, new_df],
-            ignore_index=True
-        )
-
-        df.to_csv(
-            file_path,
-            index=False
-        )
-
-        print("\n========================================")
-        print("FINDBACK DATASET UPDATED")
-        print("========================================")
-
-        print(
-            f"New reports added: {len(new_df)}"
-        )
-
-        print(
-            f"Total reports now: {len(df)}"
-        )
-
-        print(
-            "\nDataset saved to:"
-        )
-
-        print(
-            file_path
-        )
-
-        print("========================================")
+if __name__ == "__main__":
+    raise SystemExit(write_augmented_dataset())

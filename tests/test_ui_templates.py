@@ -44,7 +44,9 @@ def _forms(response):
 def test_home_search_form_preserves_route_and_field_contract(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert b"A way back" in response.data
+    assert b"Lost, then" in response.data
+    assert b"Search for a lost item" in response.data
+    assert b"Report a found item" in response.data
     form = next(form for form in _forms(response) if form["action"] == "/search")
     assert {
         "item_category", "description", "organization_type",
@@ -81,3 +83,74 @@ def test_results_present_candidates_as_unconfirmed_leads(client):
     assert b"Potential found reports" in response.data
     assert b"Weighted similarity is a guide" in response.data
     assert b"FB002" in response.data
+    assert b"candidate-topline" in response.data
+    assert b"POTENTIAL FOUND REPORT" in response.data
+
+
+def test_homepage_uses_art_directed_recovery_visual_and_guided_search(client):
+    response = client.get("/")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Lost, then" in html
+    assert "POSSIBLE FOUND REPORT" in html
+    assert "recovery-map-desktop" in html
+    assert "recovery-map-mobile" in html
+    assert 'aria-label="Search steps"' in html
+
+
+def test_csv_demo_discloses_synthetic_examples_on_home_and_results(
+        client, monkeypatch):
+    monkeypatch.setenv("FINDBACK_STORE", "csv")
+    home = client.get("/")
+    assert b"Local demo data: the checked-in report examples are synthetic." in home.data
+
+    results = client.post("/search", data={
+        "item_category": "Backpack",
+        "description": "navy bag with stitched patch",
+        "organization_name": "Greenfield University",
+        "date": "2026-08-18",
+        "approx_time": "16:20",
+    })
+    assert results.status_code == 200
+    assert b"Local demo data: the checked-in report examples are synthetic." in results.data
+
+
+def test_supabase_mode_does_not_label_reports_as_csv_demo_data(client, monkeypatch):
+    monkeypatch.setenv("FINDBACK_STORE", "supabase")
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert b"checked-in report examples are synthetic" not in response.data
+
+
+@pytest.mark.parametrize("authenticated", [False, True])
+def test_public_navigation_does_not_advertise_account_routes(
+        client, authenticated):
+    if authenticated:
+        with client.session_transaction() as session:
+            session["findback_user"] = {"id": "user-1", "email": "u@example.test"}
+    response = client.get("/")
+    html = response.get_data(as_text=True).lower()
+
+    assert response.status_code == 200
+    assert 'href="/login"' not in html
+    assert 'href="/register"' not in html
+    assert 'action="/logout"' not in html
+    assert "claims" not in html
+    assert "inbox" not in html
+
+
+@pytest.mark.parametrize("path", ["/login", "/register"])
+def test_account_routes_keep_backend_available_without_public_auth_ui(
+        client, path):
+    response = client.get(path)
+    html = response.get_data(as_text=True).lower()
+
+    assert response.status_code == 200
+    assert 'type="password"' not in html
+    assert 'name="email"' not in html
+    assert 'name="password"' not in html
+    assert 'href="/login"' not in html
+    assert 'href="/register"' not in html
+    assert "not configured" in html

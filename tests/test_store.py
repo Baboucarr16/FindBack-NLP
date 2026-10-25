@@ -82,10 +82,11 @@ def test_get_store_defaults_to_csv(tmp_path):
     assert isinstance(store, CsvStore)
 
 
-def test_get_store_falls_back_to_csv_when_supabase_requested_but_unset(
+def test_get_store_fails_when_requested_supabase_is_unconfigured(
         monkeypatch, tmp_path):
     monkeypatch.setenv("FINDBACK_STORE", "supabase")
-    assert isinstance(get_store(csv_path=str(tmp_path / "x.csv")), CsvStore)
+    with pytest.raises(RuntimeError, match="not configured"):
+        get_store(csv_path=str(tmp_path / "x.csv"))
 
 
 def test_no_real_credentials_in_repo():

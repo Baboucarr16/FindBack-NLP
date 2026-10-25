@@ -1,6 +1,7 @@
 import pandas as pd
 
 from matcher import find_matches
+from artifact_paths import output_path
 
 
 # ============================================================
@@ -249,9 +250,11 @@ print(
 
 results_df = pd.DataFrame(results)
 
+output_file = output_path("evaluation_results.csv")
+output_file.parent.mkdir(parents=True, exist_ok=True)
 
 results_df.to_csv(
-    "dataset/evaluation_results.csv",
+    output_file,
     index=False
 )
 
@@ -261,7 +264,7 @@ print(
 )
 
 print(
-    "dataset/evaluation_results.csv"
+    output_file
 )
 
 print("\n" + "=" * 70)

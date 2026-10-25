@@ -3,47 +3,87 @@
 {% set page_description = "Search lost and found reports with the details that help bring belongings back." %}
 {% block content %}
 <section class="home-hero" aria-labelledby="hero-title">
-    <div class="hero-copy">
-        <p class="eyebrow"><span class="eyebrow-index">01</span> Lost &amp; found, with a little more signal</p>
-        <h1 id="hero-title">A way back<br>starts <span>here.</span></h1>
-        <p class="hero-description">A useful detail can make the difference. Describe what went missing, then compare your search with found-item reports.</p>
-        <div class="hero-actions">
-            <a class="button button-primary" href="#report-loss">Search found reports <span aria-hidden="true">↗</span></a>
-            <a class="button button-quiet" href="/found">I found an item <span aria-hidden="true">→</span></a>
+    <div class="hero-overline">
+        <p class="eyebrow"><span class="eyebrow-index">FINDBACK / RECOVERY DESK</span></p>
+        <span class="hero-edition">A search shaped by what you remember</span>
+    </div>
+    <div class="hero-heading-row">
+        <div class="hero-copy">
+            <h1 id="hero-title">Lost, then<br><span>found.</span></h1>
         </div>
-        <p class="hero-note"><span class="note-spark" aria-hidden="true">✳</span> A considered search. A human next step.</p>
+        <div class="hero-aside">
+            <p class="hero-description">Start with the object, its last known place, and when you saw it. FindBack compares those details with found-item reports to surface possible leads.</p>
+            <div class="hero-actions">
+                <a class="button button-primary" href="#report-loss">Search for a lost item <span aria-hidden="true">↗</span></a>
+                <a class="button button-quiet" href="/found">Report a found item <span aria-hidden="true">→</span></a>
+            </div>
+        </div>
     </div>
     <figure class="hero-visual">
-        <div class="visual-caption"><span>FIELD NOTE</span><span>01 / FIND BACK</span></div>
-        <svg class="recovery-map" viewBox="0 0 640 470" role="img" aria-labelledby="map-title map-desc">
-            <title id="map-title">A recovery route connecting a reported item and a found report</title>
-            <desc id="map-desc">Abstract map lines with two marked points connected by a dotted route.</desc>
-            <rect width="640" height="470" fill="#dce5d9"/>
-            <path d="M-8 95C98 39 183 57 248 103s142 46 219 1 117-56 184-30M-10 141c112-54 195-32 264 16s142 49 224 2 131-51 174-34M-14 190c115-54 194-25 267 25s152 52 239 4 119-43 166-25M-20 248c122-51 201-18 275 33s160 55 250 8 118-36 156-17M-20 316c129-45 215-7 284 42s164 57 253 16 112-22 144-4M-15 386c127-39 215-3 291 44s163 49 247 14 115-18 140-2" fill="none" stroke="#f7f8f0" stroke-width="3" opacity=".9"/>
-            <path d="M68 363C146 333 173 267 245 251s129 21 184-19 77-100 137-141" fill="none" stroke="#182820" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 12"/>
-            <circle cx="68" cy="363" r="14" fill="#e5f54c" stroke="#182820" stroke-width="3"/>
-            <circle cx="566" cy="91" r="14" fill="#2d52e8" stroke="#f7f8f0" stroke-width="5"/>
-            <g transform="translate(274 258) rotate(-8)">
-                <rect x="0" y="0" width="236" height="150" rx="4" fill="#fcfcf7"/>
-                <path d="M0 15h236" stroke="#d6d9cf"/>
-                <circle cx="19" cy="8" r="3" fill="#2d52e8"/>
-                <text x="20" y="47" fill="#68716b" font-family="Arial,sans-serif" font-size="10" font-weight="700" letter-spacing="2">RECOVERY NOTE / 014</text>
-                <text x="20" y="79" fill="#182820" font-family="Arial,sans-serif" font-size="23" font-weight="700">One clear detail.</text>
-                <text x="20" y="103" fill="#68716b" font-family="Arial,sans-serif" font-size="13">The route starts to take shape.</text>
-                <path d="M20 126h76" stroke="#2d52e8" stroke-width="3"/>
+        <div class="visual-caption"><span>ONE SEARCH / FOUR CONTEXT SIGNALS</span><span>OBJECT · PLACE · TIME · CATEGORY</span></div>
+        <svg class="recovery-map recovery-map-desktop" viewBox="0 0 1440 430" role="img" aria-labelledby="map-title map-desc">
+            <title id="map-title">How a lost-item search connects with a possible found report</title>
+            <desc id="map-desc">Two abstract report cards sit at either end of a route. Description, place, time, and category are shown as the details that connect them.</desc>
+            <rect width="1440" height="430" fill="var(--hero-art-bg)"/>
+            <g class="map-contours" fill="none" stroke="var(--hero-art-line)" stroke-width="2">
+                <path d="M0 82C174 24 246 32 379 84s207 53 345 7 222-65 346-13 232 52 370-3"/>
+                <path d="M0 121C176 63 259 75 385 123s214 52 351 8 225-64 350-15 221 55 354 3"/>
+                <path d="M0 310c174-58 246-50 379 2s207 53 345 7 222-65 346-13 232 52 370-3"/>
+                <path d="M0 349c176-58 259-46 385 2s214 52 351 8 225-64 350-15 221 55 354 3"/>
             </g>
-            <g transform="translate(38 37)">
-                <rect width="113" height="39" rx="2" fill="#182820"/>
-                <text x="14" y="25" fill="#f8f9f3" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1">LAST SEEN</text>
+            <path class="route-thread" d="M242 218C408 218 429 133 597 133s206 164 374 164 203-79 267-79" fill="none" stroke="var(--hero-route)" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 13"/>
+            <circle cx="242" cy="218" r="11" fill="var(--acid)" stroke="var(--hero-ink)" stroke-width="4"/>
+            <circle cx="1238" cy="218" r="11" fill="var(--signal)" stroke="var(--hero-ink)" stroke-width="4"/>
+            <g class="report-slip report-slip-lost" transform="translate(64 112)">
+                <path d="M0 0h292v192H0z" fill="var(--hero-card)" stroke="var(--hero-card-line)"/>
+                <path d="M0 34h292" stroke="var(--hero-card-line)"/>
+                <circle cx="19" cy="17" r="4" fill="var(--acid)"/>
+                <text x="33" y="21" fill="var(--hero-muted)" font-size="10" font-weight="700" letter-spacing="2">YOUR SEARCH</text>
+                <path d="M25 68h84M25 90h157M25 112h116" stroke="var(--hero-card-line)" stroke-width="5" stroke-linecap="round"/>
+                <path d="M25 150h92M25 170h134" stroke="var(--hero-card-line)" stroke-width="3" stroke-linecap="round"/>
+                <text x="25" y="136" fill="var(--hero-muted)" font-size="9" font-weight="700" letter-spacing="1.4">DESCRIPTION · PLACE · TIME</text>
             </g>
-            <g transform="translate(470 145)">
-                <rect width="127" height="39" rx="2" fill="#e5f54c"/>
-                <text x="14" y="25" fill="#182820" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1">FOUND REPORT</text>
+            <g class="report-slip report-slip-found" transform="translate(1084 112)">
+                <path d="M0 0h292v192H0z" fill="var(--hero-card)" stroke="var(--hero-card-line)"/>
+                <path d="M0 34h292" stroke="var(--hero-card-line)"/>
+                <circle cx="19" cy="17" r="4" fill="var(--signal)"/>
+                <text x="33" y="21" fill="var(--hero-muted)" font-size="10" font-weight="700" letter-spacing="2">POSSIBLE FOUND REPORT</text>
+                <path d="M25 68h91M25 90h148M25 112h128" stroke="var(--hero-card-line)" stroke-width="5" stroke-linecap="round"/>
+                <path d="M25 150h121M25 170h89" stroke="var(--hero-card-line)" stroke-width="3" stroke-linecap="round"/>
+                <text x="25" y="136" fill="var(--hero-muted)" font-size="9" font-weight="700" letter-spacing="1.4">DESCRIPTION · PLACE · TIME</text>
+            </g>
+            <g class="signal-mark" transform="translate(667 161)">
+                <circle cx="53" cy="53" r="53" fill="var(--hero-mark-bg)" stroke="var(--hero-card-line)"/>
+                <path d="M31 53h44M61 39l14 14-14 14" fill="none" stroke="var(--hero-mark-fg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="53" cy="53" r="43" fill="none" stroke="var(--hero-card-line)" stroke-dasharray="1 8"/>
             </g>
         </svg>
-        <figcaption><span>Good matches are built from context.</span><span aria-hidden="true">↗</span></figcaption>
+        <svg class="recovery-map recovery-map-mobile" viewBox="0 0 360 300" aria-hidden="true" focusable="false">
+            <rect width="360" height="300" fill="var(--hero-art-bg)"/>
+            <path d="M0 44c75-24 111-16 170 1s117 20 190-3M0 256c75-24 111-16 170 1s117 20 190-3" fill="none" stroke="var(--hero-art-line)" stroke-width="2"/>
+            <path d="M180 96v108" fill="none" stroke="var(--hero-route)" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 10"/>
+            <circle cx="180" cy="111" r="7" fill="var(--acid)" stroke="var(--hero-ink)" stroke-width="3"/>
+            <circle cx="180" cy="188" r="7" fill="var(--signal)" stroke="var(--hero-ink)" stroke-width="3"/>
+            <g transform="translate(22 18)">
+                <rect width="316" height="78" fill="var(--hero-card)" stroke="var(--hero-card-line)"/>
+                <circle cx="17" cy="18" r="4" fill="var(--acid)"/>
+                <text x="30" y="21" fill="var(--hero-muted)" font-size="10" font-weight="700" letter-spacing="1.5">YOUR SEARCH</text>
+                <path d="M18 44h83M18 60h142" stroke="var(--hero-card-line)" stroke-width="4" stroke-linecap="round"/>
+            </g>
+            <g transform="translate(22 204)">
+                <rect width="316" height="78" fill="var(--hero-card)" stroke="var(--hero-card-line)"/>
+                <circle cx="17" cy="18" r="4" fill="var(--signal)"/>
+                <text x="30" y="21" fill="var(--hero-muted)" font-size="10" font-weight="700" letter-spacing="1.5">POSSIBLE FOUND REPORT</text>
+                <path d="M18 44h107M18 60h153" stroke="var(--hero-card-line)" stroke-width="4" stroke-linecap="round"/>
+            </g>
+        </svg>
+        <figcaption><span>Context helps surface a lead. People decide what happens next.</span><span aria-hidden="true">↗</span></figcaption>
     </figure>
 </section>
+
+{% if local_demo_mode %}
+<p class="demo-data-note" role="note">Local demo data: the checked-in report examples are synthetic.</p>
+{% endif %}
 
 <section class="how-section" aria-labelledby="how-title">
     <div class="section-heading">
@@ -66,6 +106,7 @@
     </div>
     <div class="form-surface">
         {% if error %}<div class="alert alert-error" role="alert" tabindex="-1">{{ error }}</div>{% endif %}
+        <ol class="step-rail search-step-rail" aria-label="Search steps"><li><span>01</span> Item</li><li><span>02</span> Place</li><li><span>03</span> Time</li></ol>
         <form action="/search" method="POST" class="report-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="submission_key" value="{{ submission_key }}">
@@ -99,7 +140,7 @@
                     <div><label for="approx_time">Approximate time <span class="required-mark">Required</span></label><input id="approx_time" type="time" name="approx_time" required></div>
                 </div>
             </fieldset>
-            <div class="form-actions"><button type="submit" class="button button-primary">Find possible matches <span aria-hidden="true">↗</span></button><p>Only share details that help identify your item.</p></div>
+            <div class="form-actions"><button type="submit" class="button button-primary"><span data-submit-label>Find possible matches</span> <span aria-hidden="true">↗</span></button><p>Only share details that help identify your item.</p><p id="search-status" class="visually-hidden" role="status" aria-live="polite"></p></div>
         </form>
     </div>
 </section>

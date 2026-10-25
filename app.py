@@ -1,8 +1,12 @@
 import sys
 import os
 import csv
+import hmac
+import secrets
+import uuid
 
 from flask import Flask, redirect, render_template, request, url_for
+from flask import abort, session
 
 
 # ============================================================
@@ -64,10 +68,62 @@ app = Flask(__name__)
 
 # Secret key signs login sessions. The default keeps local CSV mode
 # working; production must set FLASK_SECRET_KEY (see .env.example).
-app.secret_key = os.environ.get(
-    "FLASK_SECRET_KEY",
-    "dev-only-insecure-key"
+_configured_secret = os.environ.get("FLASK_SECRET_KEY", "")
+if (os.environ.get("FLASK_DEBUG", "1") == "0"
+        and (not _configured_secret
+             or _configured_secret == "dev-only-insecure-key"
+             or _configured_secret == "change-me-to-a-random-value")):
+    raise RuntimeError(
+        "FLASK_SECRET_KEY must be set to a private random value when "
+        "FLASK_DEBUG=0."
+    )
+app.secret_key = _configured_secret or "dev-only-insecure-key"
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=(
+        os.environ.get("FLASK_COOKIE_SECURE")
+        == "1" or (
+            os.environ.get("FLASK_COOKIE_SECURE") is None
+            and os.environ.get("FLASK_DEBUG", "1") != "1"
+        )
+    ),
 )
+
+
+@app.before_request
+def protect_form_posts():
+    """Require a session-bound CSRF token for state-changing forms."""
+    if request.method not in {"POST", "PUT", "PATCH", "DELETE"}:
+        return None
+    if app.config.get("TESTING"):
+        return None
+    expected = session.get("csrf_token")
+    supplied = request.form.get("csrf_token", "")
+    if not expected or not supplied or not hmac.compare_digest(
+            str(expected), str(supplied)):
+        abort(400)
+    return None
+
+
+@app.context_processor
+def form_security_context():
+    if "csrf_token" not in session:
+        session["csrf_token"] = secrets.token_urlsafe(32)
+    return {"csrf_token": session["csrf_token"]}
+
+
+@app.context_processor
+def report_submission_context():
+    return {"submission_key": str(uuid.uuid4())}
+
+
+@app.context_processor
+def demo_data_context():
+    """Label the checked-in synthetic CSV used by the local demo."""
+    return {
+        "local_demo_mode": not supabase_requested() and not invalid_storage_mode()
+    }
 
 
 def using_supabase():
@@ -81,6 +137,23 @@ def using_supabase():
         ).strip().lower() == "supabase"
         and auth_enabled()
     )
+
+
+def supabase_requested():
+    return os.environ.get("FINDBACK_STORE", "").strip().lower() == "supabase"
+
+
+def invalid_storage_mode():
+    mode = os.environ.get("FINDBACK_STORE", "csv").strip().lower() or "csv"
+    return mode not in {"csv", "supabase"}
+
+
+def request_submission_key():
+    value = request.form.get("submission_key", "").strip()
+    try:
+        return str(uuid.UUID(value))
+    except (ValueError, AttributeError):
+        return str(uuid.uuid4())
 
 
 # ============================================================
@@ -274,6 +347,12 @@ def home():
     )
 
 
+@app.get("/healthz")
+def healthz():
+    """Lightweight liveness endpoint; it does not query external services."""
+    return {"status": "ok"}, 200
+
+
 # ============================================================
 # SEARCH FOR LOST ITEM MATCHES
 # ============================================================
@@ -283,6 +362,23 @@ def home():
     methods=["POST"]
 )
 def search():
+
+    if invalid_storage_mode():
+        return render_template(
+            "index.html",
+            error="Storage mode must be csv or supabase."
+        )
+
+    if supabase_requested() and not using_supabase():
+        return render_template(
+            "index.html",
+            error="Supabase storage is selected but is not configured."
+        )
+
+    if using_supabase() and not current_user():
+        return redirect(url_for("login"))
+
+    submission_key = request_submission_key()
 
     # --------------------------------------------------------
     # Get user input
@@ -447,15 +543,49 @@ def search():
             "Lost"
     }
 
+    supabase_store = None
+    if using_supabase():
+        try:
+            from store import SupabaseStore
 
-    # --------------------------------------------------------
-    # Run Sentence-BERT matching
-    # --------------------------------------------------------
+            supabase_store = SupabaseStore(get_user_client())
+            saved = supabase_store.save_report(
+                {
+                    "report_type": "Lost",
+                    "item_category": item_category,
+                    "description": description,
+                    "organization_type": organization_type,
+                    "organization_name": organization_name,
+                    "campus_or_branch": campus_or_branch,
+                    "building_or_terminal": building_or_terminal,
+                    "floor_or_level": floor_or_level,
+                    "specific_area": specific_area,
+                    "event_date": date,
+                    "approx_time": approx_time,
+                },
+                owner_id=current_user()["id"],
+                idempotency_key=submission_key,
+            )
+            saved_row = saved[0] if isinstance(saved, list) else saved
+            lost_report.update(saved_row)
+            lost_report["date"] = saved_row.get("event_date") or date
+            found_reports = supabase_store.list_found()
+            from semantic_matcher import find_semantic_matches_against_reports
 
-    matches = find_semantic_matches_for_report(
-        lost_report,
-        top_n=5
-    )
+            matches = find_semantic_matches_against_reports(
+                lost_report, found_reports, top_n=5
+            )
+        except Exception:
+            return render_template(
+                "index.html",
+                error="Could not save or search reports. Please try again.",
+                submission_key=submission_key
+            )
+    else:
+        matches = find_semantic_matches_for_report(
+            lost_report,
+            top_n=5
+        )
 
 
     # --------------------------------------------------------
@@ -527,6 +657,36 @@ def search():
                 record
             )
 
+        if supabase_store is not None:
+            try:
+                from notify import get_notifier
+
+                notifier = get_notifier()
+                for record in match_records:
+                    if not record.get("id"):
+                        continue
+                    supabase_store.upsert_match_result({
+                        "lost_report_id": lost_report["id"],
+                        "found_report_id": record["id"],
+                        "semantic_score": record["semantic_score"],
+                        "location_score": record["location_score"],
+                        "time_score": record["time_score"],
+                        "category_score": record["category_score"],
+                        "final_score": record["final_score"],
+                    })
+                    if notifier:
+                        try:
+                            notifier(lost_report, record,
+                                     record["final_score"])
+                        except Exception:
+                            pass
+            except Exception:
+                return render_template(
+                    "index.html",
+                    error="Could not save match results. Please try again.",
+                    submission_key=submission_key
+                )
+
 
     # --------------------------------------------------------
     # Display results
@@ -550,6 +710,20 @@ def search():
     methods=["GET", "POST"]
 )
 def found():
+
+    if invalid_storage_mode():
+        return render_template(
+            "found.html",
+            error="Storage mode must be csv or supabase."
+        )
+
+    if supabase_requested() and not using_supabase():
+        return render_template(
+            "found.html",
+            error="Supabase storage is selected but is not configured."
+        )
+
+    submission_key = request_submission_key() if request.method == "POST" else ""
 
     # --------------------------------------------------------
     # Display found-item form
@@ -700,18 +874,18 @@ def found():
                     "event_date": date or None,
                     "approx_time": approx_time or None,
                 },
-                owner_id=user["id"]
+                owner_id=user["id"],
+                idempotency_key=submission_key
             )
 
-        except Exception as exc:
+        except Exception:
 
             return render_template(
                 "found.html",
                 error=(
-                    "Could not save your report "
-                    f"({exc}). "
-                    "Please try again."
-                )
+                    "Could not save your report. Please try again."
+                ),
+                submission_key=submission_key
             )
 
 
@@ -817,14 +991,12 @@ def found():
             found_report
         )
 
-    except OSError as exc:
+    except OSError:
 
         return render_template(
             "found.html",
             error=(
-                "Could not save your report "
-                f"({exc}). "
-                "Please try again."
+                "Could not save your report. Please try again."
             )
         )
 
@@ -901,12 +1073,12 @@ def register():
             password
         )
 
-    except RuntimeError as exc:
+    except RuntimeError:
 
         return render_template(
             "register.html",
             auth_enabled=auth_enabled(),
-            error=str(exc)
+            error="Authentication is not available. Please check server configuration."
         )
 
     except Exception as exc:
@@ -935,25 +1107,19 @@ def register():
         )
 
 
-    login_session(user)
-
-
-    # --------------------------------------------------------
-    # Best-effort profile sync (row needed for owned reports).
-    # A sync failure must not block an otherwise valid login.
-    # --------------------------------------------------------
-
     try:
-
         ensure_profile(
-            get_user_client(),
+            get_user_client(user),
             user["id"],
             user.get("email", "")
         )
-
     except Exception:
+        return render_template(
+            "register.html", auth_enabled=auth_enabled(),
+            error="Could not finish setting up your account. Please log in and try again."
+        )
 
-        pass
+    login_session(user)
 
 
     return redirect(
@@ -1013,12 +1179,12 @@ def login():
             password
         )
 
-    except RuntimeError as exc:
+    except RuntimeError:
 
         return render_template(
             "login.html",
             auth_enabled=auth_enabled(),
-            error=str(exc)
+            error="Authentication is not available. Please check server configuration."
         )
 
     except Exception as exc:
@@ -1030,24 +1196,19 @@ def login():
         )
 
 
-    login_session(user)
-
-
-    # --------------------------------------------------------
-    # Best-effort profile sync (row needed for owned reports).
-    # --------------------------------------------------------
-
     try:
-
         ensure_profile(
-            get_user_client(),
+            get_user_client(user),
             user["id"],
             user.get("email", "")
         )
-
     except Exception:
+        return render_template(
+            "login.html", auth_enabled=auth_enabled(),
+            error="Could not finish setting up your account. Please try again."
+        )
 
-        pass
+    login_session(user)
 
 
     return redirect(
@@ -1055,7 +1216,7 @@ def login():
     )
 
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST"])
 def logout():
 
     logout_session()
@@ -1096,7 +1257,7 @@ def _claims_store_or_error():
             get_user_client()
         )
 
-    except Exception as exc:
+    except Exception:
 
         return (
             None,
@@ -1105,7 +1266,7 @@ def _claims_store_or_error():
                 "claims.html",
                 my_claims=[],
                 incoming_claims=[],
-                error="Could not reach the database (%s)." % exc
+                error="Could not reach the database. Please try again."
             )
         )
 
@@ -1133,13 +1294,13 @@ def claims():
             user["id"]
         )
 
-    except Exception as exc:
+    except Exception:
 
         return render_template(
             "claims.html",
             my_claims=[],
             incoming_claims=[],
-            error="Could not load claims (%s)." % exc
+            error="Could not load claims. Please try again."
         )
 
 
@@ -1245,20 +1406,20 @@ def claim_new():
             note
         )
 
-    except ValueError as exc:
+    except ValueError:
 
         return render_template(
             "claim_form.html",
             report=report,
-            error=str(exc)
+            error="You have already filed a claim for this report."
         )
 
-    except Exception as exc:
+    except Exception:
 
         return render_template(
             "claim_form.html",
             report=report,
-            error="Could not file the claim (%s)." % exc
+            error="Could not file the claim. Please try again."
         )
 
 
@@ -1301,22 +1462,31 @@ def claim_decision(claim_id):
             user["id"]
         )
 
-    except (ValueError, PermissionError) as exc:
+    except PermissionError:
 
         return render_template(
             "claims.html",
             my_claims=[],
             incoming_claims=[],
-            error=str(exc)
+            error="Only the report owner can decide this claim."
         )
 
-    except Exception as exc:
+    except ValueError:
 
         return render_template(
             "claims.html",
             my_claims=[],
             incoming_claims=[],
-            error="Could not decide the claim (%s)." % exc
+            error="The claim was not found or is no longer pending."
+        )
+
+    except Exception:
+
+        return render_template(
+            "claims.html",
+            my_claims=[],
+            incoming_claims=[],
+            error="Could not decide the claim. Please try again."
         )
 
 
@@ -1356,12 +1526,12 @@ def notifications():
             current_user()["id"]
         )
 
-    except Exception as exc:
+    except Exception:
 
         return render_template(
             "notifications.html",
             notifications=[],
-            error="Could not load notifications (%s)." % exc
+            error="Could not load notifications. Please try again."
         )
 
 

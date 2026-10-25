@@ -8,6 +8,9 @@
     <h1 id="results-title">Here are the<br><span>closest leads.</span></h1>
     <p>These are candidates ranked by weighted similarity. Review the details carefully; no result confirms ownership.</p>
 </section>
+{% if local_demo_mode %}
+<p class="demo-data-note" role="note">Local demo data: the checked-in report examples are synthetic.</p>
+{% endif %}
 <section class="search-receipt" aria-labelledby="receipt-title">
     <div class="receipt-marker"><span>SEARCH RECORD</span><strong>01</strong></div>
     <div class="receipt-content">
@@ -23,16 +26,19 @@
     <div class="candidate-list">
         {% for match in matches %}
         <article class="candidate-card">
-            <div class="candidate-index"><span>LEAD</span><strong>{{ "%02d"|format(loop.index) }}</strong><span>REPORT {{ match["report_id"] }}</span></div>
+            <header class="candidate-topline">
+                <p class="candidate-kicker"><span class="candidate-number">LEAD / {{ "%02d"|format(loop.index) }}</span><span>REPORT {{ match["report_id"] }}</span></p>
+                <span class="candidate-classification">POTENTIAL FOUND REPORT</span>
+            </header>
             <div class="candidate-main">
-                <div class="candidate-details"><div class="candidate-title-line"><span class="item-stamp" aria-hidden="true">{{ match["item_category"][:1]|upper }}</span><div><p class="eyebrow">Potential found report</p><h3>{{ match["item_category"] }}</h3></div></div><p class="candidate-description">{{ match["description"] }}</p>
+                <div class="candidate-details"><div class="candidate-title-line"><span class="item-stamp" aria-hidden="true">{{ match["item_category"][:1]|upper }}</span><div><p class="eyebrow">Item category</p><h3>{{ match["item_category"] }}</h3></div></div><p class="candidate-description">{{ match["description"] }}</p>
                     <dl class="candidate-facts"><div><dt>Found at</dt><dd>{{ match["organization_name"] }}{% if match["campus_or_branch"] %} / {{ match["campus_or_branch"] }}{% endif %}{% if match["building_or_terminal"] %} / {{ match["building_or_terminal"] }}{% endif %}{% if match["floor_or_level"] %} / {{ match["floor_or_level"] }}{% endif %}{% if match["specific_area"] %} / {{ match["specific_area"] }}{% endif %}</dd></div><div><dt>Found on</dt><dd>{{ match["date"] }} · {{ match["approx_time"] }}</dd></div></dl>
                     {% if session.get('findback_user') and match.get('id') %}<a class="button button-secondary candidate-action" href="{{ url_for('claim_new', report_id=match['id']) }}">Review claim options <span aria-hidden="true">↗</span></a>{% endif %}
                 </div>
                 <aside class="match-score" aria-label="Similarity evidence for candidate {{ loop.index }}">
                     <div class="score-head"><div><p class="eyebrow">Overall similarity</p><p class="score-value">{{ "%.1f"|format(match["final_score"] * 100) }}<span>%</span></p></div><span class="score-rank">RANK<br><strong>{{ "%02d"|format(loop.index) }}</strong></span></div>
                     <progress max="1" value="{{ match['final_score'] }}" aria-label="Overall weighted similarity, {{ '%.1f'|format(match['final_score'] * 100) }} percent">{{ "%.1f"|format(match["final_score"] * 100) }}%</progress>
-                    <div class="evidence-heading"><h4>Why it surfaced</h4><span>4 SIGNALS</span></div>
+                    <div class="evidence-heading"><h4>Why it surfaced</h4><span>4 WEIGHTED COMPONENTS</span></div>
                     {% if match["explanation"] %}<p class="evidence-summary">{{ match["explanation"]["summary"] }}</p><ul class="evidence-list">{% for point in match["explanation"]["supporting"] %}<li class="positive"><span aria-hidden="true">+</span>{{ point }}</li>{% endfor %}{% for point in match["explanation"]["conflicting"] %}<li class="warning"><span aria-hidden="true">!</span>{{ point }}</li>{% endfor %}</ul>{% endif %}
                     <div class="score-rows">
                         <div class="score-row"><span>Description</span><strong>{{ "%.0f"|format(match["semantic_score"] * 100) }}%</strong><progress max="1" value="{{ match['semantic_score'] }}" aria-label="Description similarity, {{ '%.0f'|format(match['semantic_score'] * 100) }} percent"></progress></div>

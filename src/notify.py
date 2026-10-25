@@ -58,14 +58,19 @@ def notify_match_owner(lost_report, found_report, final_score):
     client = db_config.get_service_client()
 
     # Re-verify both sides server-side before writing anything.
-    fresh_lost = (client.table("reports").select("id,owner_id,status")
+    fresh_lost = (client.table("reports")
+                  .select("id,owner_id,status,report_type")
                   .eq("id", lost["id"]).limit(1).execute().data or [])
-    fresh_found = (client.table("reports").select("id")
+    fresh_found = (client.table("reports")
+                   .select("id,status,report_type")
                    .eq("id", found["id"]).limit(1).execute().data or [])
     if not fresh_lost or not fresh_found:
         return None
     if (fresh_lost[0].get("owner_id") != owner_id
-            or fresh_lost[0].get("status") != "active"):
+            or fresh_lost[0].get("status") != "active"
+            or fresh_lost[0].get("report_type") != "Lost"
+            or fresh_found[0].get("status") != "active"
+            or fresh_found[0].get("report_type") != "Found"):
         return None
 
     try:

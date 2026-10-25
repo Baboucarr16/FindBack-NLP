@@ -149,6 +149,25 @@ def test_save_report_preserves_explicit_status(fake_env, fake_client):
     assert saved[0]["status"] == "active"
 
 
+def test_save_report_persists_submission_key_and_reuses_existing_row(
+        fake_env, fake_client):
+    table = fake_client.tables["reports"]
+    store = SupabaseStore()
+    saved = store.save_report(
+        {"report_type": "Lost", "description": "red wallet"},
+        owner_id="user-1", idempotency_key="submission-1")
+    assert saved[0]["submission_key"] == "submission-1"
+    assert saved[0]["owner_id"] == "user-1"
+    assert len(table.inserted) == 1
+
+    table.rows.append(saved[0])
+    repeated = store.save_report(
+        {"report_type": "Lost", "description": "red wallet"},
+        owner_id="user-1", idempotency_key="submission-1")
+    assert repeated == saved
+    assert len(table.inserted) == 1
+
+
 def test_get_store_selects_supabase_when_configured(fake_env):
     import os
     os.environ["FINDBACK_STORE"] = "supabase"

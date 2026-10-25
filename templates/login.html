@@ -1,21 +1,17 @@
 {% extends "base.html" %}
-{% set page_title = "Log in — FindBack" %}
+{% set page_title = "Recovery desk — FindBack" %}
 {% set body_class = "auth-page" %}
 {% block content %}
-<section class="auth-layout" aria-labelledby="auth-title">
-    <div class="auth-story"><p class="eyebrow"><span class="eyebrow-index">YOUR RECOVERY DESK</span></p><h1 id="auth-title">Pick up<br>where you<br><span>left off.</span></h1><p>Sign in to keep reports, claims, and updates connected to you.</p><div class="auth-stamp" aria-hidden="true"><span>F</span><small>FIND<br>BACK</small></div></div>
-    <div class="auth-panel">
-        <p class="eyebrow"><span class="eyebrow-index">WELCOME BACK</span></p><h2>Log in</h2><p class="panel-intro">Use the email and password for your FindBack account.</p>
-        {% if error %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endif %}
-        {% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
-        {% if not auth_enabled %}<div class="alert alert-warning" role="status">Authentication is not configured on this server. Local CSV mode remains available.</div>{% endif %}
-        <form action="/login" method="POST" class="report-form auth-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <div><label for="email">Email</label><input id="email" type="email" name="email" autocomplete="email" placeholder="you@example.com" required></div>
-            <div><label for="password">Password</label><input id="password" type="password" name="password" autocomplete="current-password" required></div>
-            <button type="submit" class="button button-primary">Log in <span aria-hidden="true">↗</span></button>
-        </form>
-        <p class="auth-switch">New to FindBack? <a href="/register">Create an account <span aria-hidden="true">→</span></a></p>
-    </div>
+<section class="access-notice" aria-labelledby="access-title">
+    <p class="eyebrow"><span class="eyebrow-index">FIND BACK / RECOVERY DESK</span></p>
+    <h1 id="access-title">A clearer way<br><span>back to your item.</span></h1>
+    {% if error %}<div class="alert alert-error" role="alert">{{ error }}</div>{% endif %}
+    {% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
+    {% if not auth_enabled %}
+    <div class="alert alert-warning" role="status">Authentication is not configured on this server. Local CSV search remains available.</div>
+    {% else %}
+    <p class="access-copy">This account access endpoint is reserved for configured deployments. The public recovery tools are available from the home page.</p>
+    {% endif %}
+    <a class="button button-primary" href="/">Continue to search <span aria-hidden="true">↗</span></a>
 </section>
 {% endblock %}
