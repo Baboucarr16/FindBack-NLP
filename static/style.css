@@ -1591,3 +1591,267 @@ textarea:focus-visible {
         animation-iteration-count: 1 !important;
     }
 }
+
+
+/* FindBack UI polish — shared interaction, readability, and responsive refinements */
+:root {
+    --focus-ring: rgba(36, 98, 83, 0.28);
+    --shadow-hover: 0 18px 44px rgba(27, 47, 44, 0.12);
+}
+
+:where(a, button, input, select, textarea, summary, progress):focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 3px;
+}
+
+::selection {
+    color: var(--paper);
+    background: var(--green);
+}
+
+body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
+
+.site-shell {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.site-header {
+    position: relative;
+    z-index: 2;
+}
+
+.brand {
+    flex-shrink: 0;
+    transition: opacity 160ms ease;
+}
+
+.brand:hover {
+    opacity: 0.82;
+}
+
+.main-nav a,
+.text-link,
+.summary-edit {
+    transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.button {
+    min-height: 48px;
+    justify-content: center;
+    gap: 12px;
+    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(27, 47, 44, 0.12);
+}
+
+.button:active {
+    transform: translateY(0);
+}
+
+.hero-art svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.process-step,
+.candidate-card,
+.form-card,
+.report-summary,
+.success-panel {
+    transition: box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.candidate-card:hover {
+    border-color: var(--line-dark);
+    box-shadow: var(--shadow-hover);
+}
+
+.report-form input,
+.report-form select,
+.report-form textarea,
+.container input,
+.container select,
+.container textarea {
+    width: 100%;
+    min-width: 0;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.report-form input:focus,
+.report-form select:focus,
+.report-form textarea:focus,
+.container input:focus,
+.container select:focus,
+.container textarea:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.report-form textarea {
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.report-form label,
+.container label {
+    line-height: 1.45;
+}
+
+.report-form fieldset,
+.container fieldset {
+    min-width: 0;
+}
+
+.candidate-description,
+.summary-description,
+.hero-description,
+.page-heading > p:last-child {
+    overflow-wrap: anywhere;
+}
+
+.candidate-facts dd,
+.summary-facts dd {
+    overflow-wrap: anywhere;
+}
+
+.overall-meter {
+    display: block;
+    width: 100%;
+    height: 8px;
+    margin-top: 8px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 999px;
+    background: var(--green-pale);
+    accent-color: var(--green);
+}
+
+.overall-meter::-webkit-progress-bar {
+    border-radius: 999px;
+    background: var(--green-pale);
+}
+
+.overall-meter::-webkit-progress-value {
+    border-radius: 999px;
+    background: var(--green);
+}
+
+.overall-meter::-moz-progress-bar {
+    border-radius: 999px;
+    background: var(--green);
+}
+
+.alert {
+    border-radius: 8px;
+    line-height: 1.55;
+}
+
+.container .report-form {
+    border-radius: 12px;
+}
+
+.container .section {
+    border-radius: 8px;
+}
+
+.container .submit-button,
+.container .section li button,
+.container > .back-button {
+    border-radius: 7px;
+    transition: transform 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+.container .submit-button:hover,
+.container .section li button:hover {
+    transform: translateY(-1px);
+}
+
+.container input,
+.container select,
+.container textarea {
+    min-height: 44px;
+    padding: 11px 12px;
+    border: 1px solid var(--line-dark);
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+}
+
+.container textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.container label {
+    display: block;
+    margin: 13px 0 6px;
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    font-weight: 650;
+}
+
+.container .alert,
+.container .alert-success {
+    padding: 13px 15px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.container a {
+    text-underline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+    .site-header {
+        align-items: center;
+    }
+
+    .hero-art {
+        margin-inline: 0;
+    }
+
+    .candidate-card:hover {
+        box-shadow: var(--shadow);
+    }
+}
+
+@media (max-width: 480px) {
+    .button {
+        width: 100%;
+    }
+
+    .container .section li form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .container .section li button {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .button,
+    .brand,
+    .main-nav a,
+    .text-link,
+    .summary-edit,
+    .candidate-card,
+    .process-step {
+        transition: none !important;
+    }
+
+    .button:hover,
+    .container .submit-button:hover,
+    .container .section li button:hover {
+        transform: none;
+    }
+}
