@@ -172,7 +172,8 @@
                             </select>
 
                             <label for="organization_name">Place / organization <span class="required-mark">Required</span></label>
-                            <input id="organization_name" type="text" name="organization_name" placeholder="e.g. Greenfield University" required>
+                            <input id="organization_name" type="text" name="organization_name" placeholder="e.g. Greenfield University" aria-describedby="location-help" autocomplete="organization" required>
+                            <p class="field-help" id="location-help">Start with the main place. Add a building or room below if you remember it.</p>
 
                             <div class="field-grid">
                                 <div>
@@ -203,7 +204,8 @@
                                 </div>
                                 <div>
                                     <label for="approx_time">Approximate time <span class="required-mark">Required</span></label>
-                                    <input id="approx_time" type="time" name="approx_time" required>
+                                    <input id="approx_time" type="time" name="approx_time" aria-describedby="time-help" required>
+                                <p class="field-help" id="time-help">An estimate is fine if you do not remember the exact time.</p>
                                 </div>
                             </div>
                         </fieldset>
@@ -212,7 +214,7 @@
                             Find possible matches
                             <span class="button-arrow" aria-hidden="true">↗</span>
                         </button>
-                        <p class="form-footnote">Your search is based on the details you provide.</p>
+                        <p class="form-footnote">Your search is based on the details you provide. Similarity scores are guides, not confirmed matches.</p>
                     </form>
                 </div>
             </section>
